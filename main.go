@@ -2,12 +2,22 @@ package main
 
 import "fmt"
 
-type pacgo struct {
+type Posicao struct {
   linha  int
   coluna int
 }
 
-type labirinto struct {
+type PacGo struct {
+  posicao Posicao
+  figura  rune // emoji
+}
+
+type Fantasma struct {
+  posicao Posicao
+  figura  rune // emoji
+}
+
+type Labirinto struct {
   largura int
   altura  int
   mapa    []string
@@ -16,13 +26,14 @@ type labirinto struct {
 func construirLabirinto(nomeArquivo string) {
   // TODO: carregar arquivo de mapa
   // TODO: determinar dimensao da tela
+  // Julia
 }
 
 func atualizarLabirinto() {
   // TODO: imprime o labirinto
   // TODO: imprime pacgo na posição x,y
   // TODO: imprime fantasmas
-
+  // Dani
 }
 
 func detectarColisao() bool {
@@ -46,11 +57,12 @@ const (
 )
 
 func entradaDoUsuario() Movimento {
+  // Eduardo
   // Lê teclado
   return Nenhum
 }
 
-func moverPacgo() {
+func moverPacGo() {
   // Atualiza posição do usuário
   switch entradaDoUsuario() {
   case Cima:
@@ -62,7 +74,11 @@ func moverPacgo() {
 }
 
 func moverFantasmas() {
+  // Isa
+}
 
+func dorme() {
+  // TODO: sleep
 }
 
 func main() {
@@ -73,11 +89,11 @@ func main() {
 
   // TODO: Loop do jogo
   for  {
-    // TODO: timer (sleep)
+    dorme()
 
     atualizarLabirinto()
 
-    moverPacgo()
+    moverPacGo()
 
     moverFantasmas()
 
