@@ -138,8 +138,13 @@ func mostraCursor() {
 
 func atualizarLabirinto() {
   limpaTela()
+
   for _, linha := range labirinto.mapa {
-    fmt.Println(linha)
+    for _, char := range linha {
+      ch := fmt.Sprintf("%c", char)
+      fmt.Print(ch/*, ch*/)
+    }
+    fmt.Println("")
   }
 
   // Atualiza PacGo
@@ -197,15 +202,13 @@ func entradaDoUsuario() Movimento {
   return leTeclado()
 }
 
-func moverPacGo() bool {
-
-  var sinal = entradaDoUsuario()
+func moverPacGo(m Movimento) {
 
   var valorDaPosicaoAtualDaPacgo = labirinto.mapa[pacgo.posicao.linha][pacgo.posicao.coluna]
   var linhaAtualDaPacgo = pacgo.posicao.linha
   var colunaAtualDaPacgo = pacgo.posicao.coluna
 
-  switch sinal {
+  switch m {
   case Cima:
              if linhaAtualDaPacgo == 0{
                  if valorDaPosicaoAtualDaPacgo == ' '{
@@ -240,20 +243,17 @@ func moverPacGo() bool {
                }
              }
   case Esquerda:
-              if colunaAtualDaPacgo == 0{
-                  if valorDaPosicaoAtualDaPacgo == ' '{
-                    pacgo.posicao.coluna = labirinto.largura - 1
-                  }
-              }else{
-                var posicaoEsquerdaDaPacgo = labirinto.mapa[pacgo.posicao.linha][pacgo.posicao.coluna - 1]
-                if posicaoEsquerdaDaPacgo != '#'{
-                  pacgo.posicao.coluna = pacgo.posicao.coluna - 1
-                }
-              }
-  case Sai: return true
-  default:
+    if colunaAtualDaPacgo == 0{
+      if valorDaPosicaoAtualDaPacgo == ' '{
+        pacgo.posicao.coluna = labirinto.largura - 1
+      }
+    }else{
+      var posicaoEsquerdaDaPacgo = labirinto.mapa[pacgo.posicao.linha][pacgo.posicao.coluna - 1]
+      if posicaoEsquerdaDaPacgo != '#'{
+        pacgo.posicao.coluna = pacgo.posicao.coluna - 1
+      }
+    }
   }
-  return false
 }
 
 func moverFantasmas() {
@@ -267,8 +267,8 @@ func dorme() {
 }
 
 func main() {
-  defer mostraCursor()
   escondeCursor()
+  defer mostraCursor()
 
   inicializa()
   defer finaliza()
@@ -288,9 +288,9 @@ func main() {
 
     moverFantasmas()
 
-    if (moverPacGo()) {
-      break
-    }
+    m := entradaDoUsuario()
+    if m == Sai { break }
+    moverPacGo(m)
 
     if detectarColisao() {
       terminarJogo()
