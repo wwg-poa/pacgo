@@ -23,6 +23,9 @@ type Labirinto struct {
   mapa    []string
 }
 
+var labirinto Labirinto
+
+
 func construirLabirinto(nomeArquivo string) {
   // TODO: carregar arquivo de mapa
   // TODO: determinar dimensao da tela
@@ -83,9 +86,14 @@ func dorme() {
 
 func main() {
 
+  labirinto =  Labirinto{ 4, 10, []string {"#### #####",
+                                           "         #",
+                                           "#         ",
+                                           "#### #####"}}
+
   fmt.Println("Hello pac go!")
 
-  construirLabirinto()
+  construirLabirinto("")
 
   // TODO: Loop do jogo
   for  {
