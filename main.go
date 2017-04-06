@@ -1,6 +1,11 @@
 package main
 
-import "fmt"
+import (
+  "fmt"
+  "os"
+  "os/exec"
+  "time"
+)
 
 type Posicao struct {
   linha  int
@@ -24,7 +29,8 @@ type Labirinto struct {
 }
 
 var labirinto Labirinto
-
+var pacgo     PacGo
+var fantasmas []Fantasma
 
 func construirLabirinto(nomeArquivo string) {
   // TODO: carregar arquivo de mapa
@@ -32,8 +38,19 @@ func construirLabirinto(nomeArquivo string) {
   // Julia
 }
 
+func limpaTela() {
+  cmd := exec.Command("clear")
+  cmd.Stdout = os.Stdout
+  cmd.Run()
+}
+
 func atualizarLabirinto() {
-  // TODO: imprime o labirinto
+  limpaTela()
+  for _, linha := range labirinto.mapa {
+    fmt.Println(linha)
+  }
+
+
   // TODO: imprime pacgo na posição x,y
   // TODO: imprime fantasmas
   // Dani
@@ -81,17 +98,24 @@ func moverFantasmas() {
 }
 
 func dorme() {
-  // TODO: sleep
+  time.Sleep(time.Second) // 1s
 }
 
 func main() {
+
+  pacgo     = PacGo{ posicao: Posicao{2, 2}, figura: 'G'}
+
+  fantasmas = []Fantasma{
+    { posicao: Posicao{2, 4}, figura:'F'},
+    { posicao: Posicao{1, 6}, figura:'F'},
+  }
 
   labirinto =  Labirinto{ 4, 10, []string {"#### #####",
                                            "         #",
                                            "#         ",
                                            "#### #####"}}
 
-  fmt.Println("Hello pac go!")
+  // fmt.Println("Hello pac go!")
 
   construirLabirinto("")
 
