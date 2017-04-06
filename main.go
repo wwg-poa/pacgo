@@ -137,23 +137,25 @@ const (
         Esquerda
         Direita
         Nenhum
+        Sai
 )
 
 func entradaDoUsuario() Movimento {
   // Eduardo
-  // Lê teclado
-  return Nenhum
+  return leTeclado()
 }
 
-func moverPacGo() {
+func moverPacGo() bool {
   // Atualiza posição do usuário
   switch entradaDoUsuario() {
   case Cima:
   case Baixo:
   case Direita:
   case Esquerda:
+  case Sai: return true
   default:
   }
+  return false
 }
 
 func moverFantasmas() {
@@ -167,6 +169,7 @@ func dorme() {
 }
 
 func main() {
+  inicializa()
   pacgo     = PacGo{ posicao: Posicao{2, 2}, figura: 'G'}
 
   quantidade_de_fantasmas = 2
@@ -189,12 +192,13 @@ func main() {
 
     atualizarLabirinto()
 
-    moverPacGo()
+    if (moverPacGo()) {
+      break
+    }
 
 
     if detectarColisao() {
       terminarJogo()
     }
   }
-
 }
