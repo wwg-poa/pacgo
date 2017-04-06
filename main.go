@@ -45,15 +45,13 @@ func (labirinto *Labirinto) imprime() {
 
 var labirinto *Labirinto
 var pacgo     PacGo
-var fantasmas []Fantasma
+
+var lista_de_fantasmas []Fantasma
+var quantidade_de_fantasmas int
 
 var ErrMapNotFound = errors.New("Não conseguiu ler o arquivo do mapa")
 
 func construirLabirinto(nomeArquivo string) (*Labirinto, error) {
-  // TODO: carregar arquivo de mapa
-  // TODO: determinar dimensao da tela
-  // Julia
-
   if file, err := os.Open("./data/mapa.txt"); err == nil {
 
     // fecha depois de ler o arquivo
@@ -105,6 +103,22 @@ func atualizarLabirinto() {
   // Dani
 }
 
+func criarFantasmas() {
+  /* Valor inicial utilizado para posicionar um fantasma ao lado do outro */
+  var contador = 10 // hard coded
+  lista_de_fantasmas = make([]Fantasma, 2) // mudar para quantidade_de_fantasmas
+
+  for i := 0; i < 2; i++ { // mudar para quantidade_de_fantasmas
+      fantasma := new(Fantasma)
+      fantasma.posicao.linha = 5 // hard coded
+      fantasma.posicao.coluna = contador
+
+      lista_de_fantasmas = append(lista_de_fantasmas, *fantasma)
+      contador += 1
+      fmt.Printf("Fantasma %d: (%d, %d)\n", i, fantasma.posicao.linha, fantasma.posicao.coluna)
+  }
+}
+
 func detectarColisao() bool {
   // TODO: posição do pacgo == posição de algum fantasma?
   // Ação ?
@@ -143,7 +157,9 @@ func moverPacGo() {
 }
 
 func moverFantasmas() {
-  // Isa
+  for i := 0; i < 2; i++{ // mudar para quantidade_de_fantasmas
+    lista_de_fantasmas[i].posicao.coluna += 1
+  }
 }
 
 func dorme() {
@@ -151,10 +167,11 @@ func dorme() {
 }
 
 func main() {
-
   pacgo     = PacGo{ posicao: Posicao{2, 2}, figura: 'G'}
 
-  fantasmas = []Fantasma{
+  quantidade_de_fantasmas = 2
+
+  lista_de_fantasmas = []Fantasma{
     { posicao: Posicao{2, 4}, figura:'F'},
     { posicao: Posicao{1, 6}, figura:'F'},
   }
@@ -162,15 +179,18 @@ func main() {
   labirinto, _ = construirLabirinto("")
   labirinto.imprime()
 
+  criarFantasmas()
+
   // TODO: Loop do jogo
   for  {
+    moverFantasmas()
+
     dorme()
 
     atualizarLabirinto()
 
     moverPacGo()
 
-    moverFantasmas()
 
     if detectarColisao() {
       terminarJogo()
