@@ -13,7 +13,7 @@ type labirinto struct {
   mapa    []string
 }
 
-func construirLabirinto() {
+func construirLabirinto(nomeArquivo string) {
   // TODO: carregar arquivo de mapa
   // TODO: determinar dimensao da tela
 }
@@ -50,7 +50,7 @@ func entradaDoUsuario() Movimento {
   return Nenhum
 }
 
-func processaMovimento() {
+func moverPacgo() {
   // Atualiza posição do usuário
   switch entradaDoUsuario() {
   case Cima:
@@ -69,7 +69,7 @@ func main() {
 
   fmt.Println("Hello pac go!")
 
-  // TODO: inicializar labirinto
+  construirLabirinto()
 
   // TODO: Loop do jogo
   for  {
@@ -77,7 +77,7 @@ func main() {
 
     atualizarLabirinto()
 
-    processaMovimento()
+    moverPacgo()
 
     moverFantasmas()
 
