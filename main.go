@@ -3,6 +3,11 @@ package main
 import (
   "fmt"
   "time"
+  "os"
+  "bufio"
+  "log"
+  "regexp"
+  "errors"
 )
 
 type Posicao struct {
@@ -26,17 +31,58 @@ type Labirinto struct {
   mapa    []string
 }
 
-var labirinto Labirinto
-var pacgo     PacGo
-var fantasmas []Fantasma
+func (labirinto *Labirinto) imprime() {
+  fmt.Println(labirinto.largura)
+  fmt.Println(labirinto.altura)
 
-const ESC = "\x1b"
-
-func construirLabirinto(nomeArquivo string) {
-  // TODO: carregar arquivo de mapa
-  // TODO: determinar dimensao da tela
-  // Julia
+  for _, linha := range labirinto.mapa {
+    fmt.Println(linha)
+  }
 }
+
+var labirinto *Labirinto
+var pacgo     PacGo
+var lista_de_fantasmas []Fantasma
+var quantidade_de_fantasmas int
+
+
+func construirLabirinto(nomeArquivo string) (*Labirinto, error) {
+
+  var ErrMapNotFound = errors.New("Não conseguiu ler o arquivo do mapa")
+
+  if file, err := os.Open("./data/mapa.txt"); err == nil {
+
+    // fecha depois de ler o arquivo
+    defer file.Close()
+
+    // inicializa o mapa vazio
+    mapa := []string{}
+
+    r, _ := regexp.Compile("[^ #]")
+
+    // cria um leitor para ler linha a linha o arquivo
+    scanner := bufio.NewScanner(file)
+    for scanner.Scan() {
+      linha := scanner.Text()
+      linha = r.ReplaceAllString(linha, " ")
+      mapa = append(mapa, linha)
+    }
+
+    // verifica se teve erro o leitor
+    if err = scanner.Err(); err != nil {
+      log.Fatal(err)
+      return nil, ErrMapNotFound
+    }
+
+    l := &Labirinto{largura: len(mapa[0]), altura: len(mapa), mapa : mapa}
+    return l, nil
+
+  } else {
+    log.Fatal(err)
+    return nil, ErrMapNotFound
+  }
+}
+const ESC = "\x1b"
 
 func limpaTela() {
   fmt.Printf("%s[2J", ESC)
@@ -68,6 +114,22 @@ func atualizarLabirinto() {
   // TODO: imprime fantasmas
 }
 
+func criarFantasmas() {
+  /* Valor inicial utilizado para posicionar um fantasma ao lado do outro */
+  var contador = 10 // hard coded
+  lista_de_fantasmas = make([]Fantasma, 2) // mudar para quantidade_de_fantasmas
+
+  for i := 0; i < 2; i++ { // mudar para quantidade_de_fantasmas
+      fantasma := new(Fantasma)
+      fantasma.posicao.linha = 5 // hard coded
+      fantasma.posicao.coluna = contador
+
+      lista_de_fantasmas = append(lista_de_fantasmas, *fantasma)
+      contador += 1
+      fmt.Printf("Fantasma %d: (%d, %d)\n", i, fantasma.posicao.linha, fantasma.posicao.coluna)
+  }
+}
+
 func detectarColisao() bool {
   // TODO: posição do pacgo == posição de algum fantasma?
   // Ação ?
@@ -86,27 +148,31 @@ const (
         Esquerda
         Direita
         Nenhum
+        Sai
 )
 
 func entradaDoUsuario() Movimento {
   // Eduardo
-  // Lê teclado
-  return Nenhum
+  return leTeclado()
 }
 
-func moverPacGo() {
+func moverPacGo() bool {
   // Atualiza posição do usuário
   switch entradaDoUsuario() {
   case Cima:
   case Baixo:
   case Direita:
   case Esquerda:
+  case Sai: return true
   default:
   }
+  return false
 }
 
 func moverFantasmas() {
-  // Isa
+  for i := 0; i < 2; i++{ // mudar para quantidade_de_fantasmas
+    lista_de_fantasmas[i].posicao.coluna += 1
+  }
 }
 
 func dorme() {
@@ -114,37 +180,39 @@ func dorme() {
 }
 
 func main() {
-
 //  defer mostraCursor()
   escondeCursor()
 
+  inicializa()
+
   pacgo     = PacGo{ posicao: Posicao{2, 2}, figura: 'G'}
 
-  fantasmas = []Fantasma{
+  quantidade_de_fantasmas = 2
+
+  lista_de_fantasmas = []Fantasma{
     { posicao: Posicao{2, 4}, figura:'F'},
     { posicao: Posicao{1, 6}, figura:'F'},
   }
 
-  labirinto =  Labirinto{ largura:10, altura:4, mapa:[]string {"#### #####",
-                                                               "#        #",
-                                                               "          ",
-                                                               "#### #####"}}
+  labirinto, _ = construirLabirinto("")
+  labirinto.imprime()
 
-  construirLabirinto("")
+  criarFantasmas()
 
   // TODO: Loop do jogo
   for  {
+    moverFantasmas()
+
     dorme()
 
     atualizarLabirinto()
 
-    moverPacGo()
-
-    moverFantasmas()
+    if (moverPacGo()) {
+      break
+    }
 
     if detectarColisao() {
       terminarJogo()
     }
   }
-
 }
