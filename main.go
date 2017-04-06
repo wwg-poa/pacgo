@@ -170,7 +170,8 @@ func dorme() {
 
 func main() {
   inicializa()
-  pacgo     = PacGo{ posicao: Posicao{2, 2}, figura: 'G'}
+  defer finaliza()
+  pacgo = PacGo{ posicao: Posicao{2, 2}, figura: 'G'}
 
   quantidade_de_fantasmas = 2
 

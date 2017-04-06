@@ -11,6 +11,11 @@ func inicializa() {
   inicializaTeclado()
 }
 
+func finaliza() {
+  // restore the echoing state when exiting
+  exec.Command("stty", "-F", "/dev/tty", "echo").Run()
+}
+
 var teclas chan byte
 
 func inicializaTeclado() {
@@ -18,8 +23,6 @@ func inicializaTeclado() {
   exec.Command("stty", "-F", "/dev/tty", "cbreak", "min", "1").Run()
   // do not display entered characters on the screen
   exec.Command("stty", "-F", "/dev/tty", "-echo").Run()
-  // restore the echoing state when exiting
-  defer exec.Command("stty", "-F", "/dev/tty", "echo").Run()
 
   teclas = make(chan byte)
   go rotinaTeclado(teclas)
@@ -56,8 +59,8 @@ func leTeclado() Movimento {
             fmt.Println("Sai")
             return Sai
         }
-        
-          
+      } else if b == 'q' || b == 'Q' {
+        return Sai
       } else {
         fmt.Println("?: ", b)
       }
