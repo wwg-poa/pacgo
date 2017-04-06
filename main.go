@@ -8,6 +8,8 @@ import (
 
   "bufio"
   "log"
+  "regexp"
+
   "errors"
 )
 
@@ -60,10 +62,13 @@ func construirLabirinto(nomeArquivo string) (*Labirinto, error) {
     // inicializa o mapa vazio
     mapa := []string{}
 
+    r, _ := regexp.Compile("[^ #]")
+
     // cria um leitor para ler linha a linha o arquivo
     scanner := bufio.NewScanner(file)
     for scanner.Scan() {
       linha := scanner.Text()
+      linha = r.ReplaceAllString(linha, " ")
       mapa = append(mapa, linha)
     }
 
