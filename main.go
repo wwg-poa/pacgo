@@ -66,7 +66,7 @@ var pacgo     *PacGo
 var lista_de_fantasmas []*Fantasma
 var quantidade_de_fantasmas int
 
-func construirLabirinto(nomeArquivo string) (*Labirinto, error) {
+func construirLabirinto(nomeArquivo string) (*Labirinto, *PacGo, []*Fantasma, error) {
 
   var ErrMapNotFound = errors.New("Não conseguiu ler o arquivo do mapa")
 
@@ -116,6 +116,7 @@ func construirLabirinto(nomeArquivo string) (*Labirinto, error) {
     return nil, nil, nil, ErrMapNotFound
   }
 }
+
 const ESC = "\x1b"
 
 func limpaTela() {
