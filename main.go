@@ -43,21 +43,40 @@ func (labirinto *Labirinto) imprime() {
   }
 }
 
-var labirinto *Labirinto
-var pacgo     PacGo
+func (pacgo *PacGo) imprime() {
+  fmt.Println("PacGo")
+  fmt.Println(pacgo.posicao.linha)
+  fmt.Println(pacgo.posicao.coluna)
+}
 
-var lista_de_fantasmas []Fantasma
+func imprimeFantasma(fantasmas []*Fantasma) {
+  for indice, fantasma := range fantasmas{
+    fmt.Println("Fantasma : ",indice)
+    fmt.Println(fantasma.posicao.linha)
+    fmt.Println(fantasma.posicao.coluna)
+  }
+}
+
+
+var labirinto *Labirinto
+var pacgo     *PacGo
+var lista_de_fantasmas []*Fantasma
 var quantidade_de_fantasmas int
 
 var ErrMapNotFound = errors.New("Não conseguiu ler o arquivo do mapa")
 
-func construirLabirinto(nomeArquivo string) (*Labirinto, error) {
+func construirLabirinto(nomeArquivo string) (*Labirinto, *PacGo, []*Fantasma, error) {
+  // TODO: carregar arquivo de mapa
+  // TODO: determinar dimensao da tela
+  // Julia
   if file, err := os.Open("./data/mapa.txt"); err == nil {
 
     // fecha depois de ler o arquivo
     defer file.Close()
 
     // inicializa o mapa vazio
+    var pacgo *PacGo//{ posicao: Posicao{2, 2}, figura: 'G'}
+    fantasmas := []*Fantasma{}
     mapa := []string{}
 
     r, _ := regexp.Compile("[^ #]")
@@ -66,6 +85,18 @@ func construirLabirinto(nomeArquivo string) (*Labirinto, error) {
     scanner := bufio.NewScanner(file)
     for scanner.Scan() {
       linha := scanner.Text()
+
+      for indice , caracter := range linha {
+        switch caracter {
+          case 'F': {
+            fantasma := &Fantasma{ posicao: Posicao{len(mapa), indice}, figura: 'F'}
+            fantasmas = append(fantasmas, fantasma)
+          }
+          //fmt.Println(caracter)
+          case 'G': pacgo = &PacGo{ posicao: Posicao{len(mapa), indice}, figura: 'G'}
+        }
+      }
+
       linha = r.ReplaceAllString(linha, " ")
       mapa = append(mapa, linha)
     }
@@ -73,15 +104,15 @@ func construirLabirinto(nomeArquivo string) (*Labirinto, error) {
     // verifica se teve erro o leitor
     if err = scanner.Err(); err != nil {
       log.Fatal(err)
-      return nil, ErrMapNotFound
+      return nil, nil, nil, ErrMapNotFound
     }
 
     l := &Labirinto{largura: len(mapa[0]), altura: len(mapa), mapa : mapa}
-    return l, nil
+    return l, pacgo, fantasmas, nil
 
   } else {
     log.Fatal(err)
-    return nil, ErrMapNotFound
+    return nil, nil, nil, ErrMapNotFound
   }
 }
 
@@ -103,21 +134,21 @@ func atualizarLabirinto() {
   // Dani
 }
 
-func criarFantasmas() {
-  /* Valor inicial utilizado para posicionar um fantasma ao lado do outro */
-  var contador = 10 // hard coded
-  lista_de_fantasmas = make([]Fantasma, 2) // mudar para quantidade_de_fantasmas
+// func criarFantasmas() {
+//   /* Valor inicial utilizado para posicionar um fantasma ao lado do outro */
+//   var contador = 10 // hard coded
+//   lista_de_fantasmas = make([]Fantasma, 2) // mudar para quantidade_de_fantasmas
 
-  for i := 0; i < 2; i++ { // mudar para quantidade_de_fantasmas
-      fantasma := new(Fantasma)
-      fantasma.posicao.linha = 5 // hard coded
-      fantasma.posicao.coluna = contador
+//   for i := 0; i < 2; i++ { // mudar para quantidade_de_fantasmas
+//       fantasma := new(Fantasma)
+//       fantasma.posicao.linha = 5 // hard coded
+//       fantasma.posicao.coluna = contador
 
-      lista_de_fantasmas = append(lista_de_fantasmas, *fantasma)
-      contador += 1
-      fmt.Printf("Fantasma %d: (%d, %d)\n", i, fantasma.posicao.linha, fantasma.posicao.coluna)
-  }
-}
+//       lista_de_fantasmas = append(lista_de_fantasmas, *fantasma)
+//       contador += 1
+//       fmt.Printf("Fantasma %d: (%d, %d)\n", i, fantasma.posicao.linha, fantasma.posicao.coluna)
+//   }
+// }
 
 func detectarColisao() bool {
   // TODO: posição do pacgo == posição de algum fantasma?
@@ -170,19 +201,14 @@ func dorme() {
 
 func main() {
   inicializa()
-  pacgo     = PacGo{ posicao: Posicao{2, 2}, figura: 'G'}
 
-  quantidade_de_fantasmas = 2
-
-  lista_de_fantasmas = []Fantasma{
-    { posicao: Posicao{2, 4}, figura:'F'},
-    { posicao: Posicao{1, 6}, figura:'F'},
-  }
-
-  labirinto, _ = construirLabirinto("")
+  labirinto, pacgo, lista_de_fantasmas, _ = construirLabirinto("")
   labirinto.imprime()
+  quantidade_de_fantasmas = len(lista_de_fantasmas)
+  // pacgo.imprime()
+  // imprimeFantasma(lista_de_fantasmas)
 
-  criarFantasmas()
+  //criarFantasmas()
 
   // TODO: Loop do jogo
   for  {
