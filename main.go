@@ -2,8 +2,6 @@ package main
 
 import (
   "fmt"
-  "os"
-  "os/exec"
   "time"
 )
 
@@ -32,6 +30,8 @@ var labirinto Labirinto
 var pacgo     PacGo
 var fantasmas []Fantasma
 
+const ESC = "\x1b"
+
 func construirLabirinto(nomeArquivo string) {
   // TODO: carregar arquivo de mapa
   // TODO: determinar dimensao da tela
@@ -39,9 +39,20 @@ func construirLabirinto(nomeArquivo string) {
 }
 
 func limpaTela() {
-  cmd := exec.Command("clear")
-  cmd.Stdout = os.Stdout
-  cmd.Run()
+  fmt.Printf("%s[2J", ESC)
+  moveCursor(Posicao{1,1})
+}
+
+func moveCursor(p Posicao) {
+  fmt.Printf("%s[%d;%df", ESC, p.linha, p.coluna)
+}
+
+func escondeCursor() {
+  fmt.Printf("%s?25l", ESC)
+}
+
+func mostraCursor() {
+  fmt.Printf("%s?25h", ESC)
 }
 
 func atualizarLabirinto() {
@@ -50,10 +61,11 @@ func atualizarLabirinto() {
     fmt.Println(linha)
   }
 
+  // Atualiza PacGo
+  moveCursor(pacgo.posicao)
+  fmt.Printf("%c", pacgo.figura)
 
-  // TODO: imprime pacgo na posição x,y
   // TODO: imprime fantasmas
-  // Dani
 }
 
 func detectarColisao() bool {
@@ -98,10 +110,13 @@ func moverFantasmas() {
 }
 
 func dorme() {
-  time.Sleep(time.Second) // 1s
+  time.Sleep(time.Millisecond * 500) // 1s
 }
 
 func main() {
+
+//  defer mostraCursor()
+  escondeCursor()
 
   pacgo     = PacGo{ posicao: Posicao{2, 2}, figura: 'G'}
 
@@ -110,12 +125,10 @@ func main() {
     { posicao: Posicao{1, 6}, figura:'F'},
   }
 
-  labirinto =  Labirinto{ 4, 10, []string {"#### #####",
-                                           "         #",
-                                           "#         ",
-                                           "#### #####"}}
-
-  // fmt.Println("Hello pac go!")
+  labirinto =  Labirinto{ largura:10, altura:4, mapa:[]string {"#### #####",
+                                                               "#        #",
+                                                               "          ",
+                                                               "#### #####"}}
 
   construirLabirinto("")
 
