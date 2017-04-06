@@ -5,6 +5,10 @@ import (
   "os"
   "os/exec"
   "time"
+
+  "bufio"
+  "log"
+  "errors"
 )
 
 type Posicao struct {
@@ -28,14 +32,54 @@ type Labirinto struct {
   mapa    []string
 }
 
-var labirinto Labirinto
+func (labirinto *Labirinto) imprime() {
+  fmt.Println(labirinto.largura)
+  fmt.Println(labirinto.altura)
+
+  for _, linha := range labirinto.mapa {
+    fmt.Println(linha)
+  }
+}
+
+var labirinto *Labirinto
 var pacgo     PacGo
 var fantasmas []Fantasma
 
-func construirLabirinto(nomeArquivo string) {
+var ErrMapNotFound = errors.New("Não conseguiu ler o arquivo do mapa")
+
+func construirLabirinto(nomeArquivo string) (*Labirinto, error) {
   // TODO: carregar arquivo de mapa
   // TODO: determinar dimensao da tela
   // Julia
+
+  if file, err := os.Open("./data/mapa.txt"); err == nil {
+
+    // fecha depois de ler o arquivo
+    defer file.Close()
+
+    // inicializa o mapa vazio
+    mapa := []string{}
+
+    // cria um leitor para ler linha a linha o arquivo
+    scanner := bufio.NewScanner(file)
+    for scanner.Scan() {
+      linha := scanner.Text()
+      mapa = append(mapa, linha)
+    }
+
+    // verifica se teve erro o leitor
+    if err = scanner.Err(); err != nil {
+      log.Fatal(err)
+      return nil, ErrMapNotFound
+    }
+
+    l := &Labirinto{largura: len(mapa[0]), altura: len(mapa), mapa : mapa}
+    return l, nil
+
+  } else {
+    log.Fatal(err)
+    return nil, ErrMapNotFound
+  }
 }
 
 func limpaTela() {
@@ -110,14 +154,8 @@ func main() {
     { posicao: Posicao{1, 6}, figura:'F'},
   }
 
-  labirinto =  Labirinto{ 4, 10, []string {"#### #####",
-                                           "         #",
-                                           "#         ",
-                                           "#### #####"}}
-
-  // fmt.Println("Hello pac go!")
-
-  construirLabirinto("")
+  labirinto, _ = construirLabirinto("")
+  labirinto.imprime()
 
   // TODO: Loop do jogo
   for  {
