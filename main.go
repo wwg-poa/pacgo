@@ -225,6 +225,7 @@ func main() {
   escondeCursor()
 
   inicializa()
+  defer finaliza()
 
   labirinto, pacgo, lista_de_fantasmas, _ = construirLabirinto("")
   labirinto.imprime()
