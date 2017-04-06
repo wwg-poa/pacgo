@@ -121,11 +121,11 @@ const ESC = "\x1b"
 
 func limpaTela() {
   fmt.Printf("%s[2J", ESC)
-  moveCursor(Posicao{1,1})
+  moveCursor(Posicao{0,0})
 }
 
 func moveCursor(p Posicao) {
-  fmt.Printf("%s[%d;%df", ESC, p.linha, p.coluna)
+  fmt.Printf("%s[%d;%df", ESC, p.linha + 1, p.coluna + 1)
 }
 
 func escondeCursor() {
@@ -147,6 +147,13 @@ func atualizarLabirinto() {
   fmt.Printf("%c", pacgo.figura)
 
   // TODO: imprime fantasmas
+  for _, fantasma := range lista_de_fantasmas {
+    moveCursor(fantasma.posicao)
+    fmt.Printf("%c", fantasma.figura)
+  }
+
+  // Move o cursor para fora do labirinto
+  moveCursor(Posicao{labirinto.altura + 2, 1})
 }
 
 // func criarFantasmas() {
@@ -187,7 +194,6 @@ const (
 )
 
 func entradaDoUsuario() Movimento {
-  // Eduardo
   return leTeclado()
 }
 
@@ -211,11 +217,11 @@ func moverFantasmas() {
 }
 
 func dorme() {
-  time.Sleep(time.Millisecond * 500) // 1s
+  time.Sleep(time.Millisecond * 500)
 }
 
 func main() {
-//  defer mostraCursor()
+  defer mostraCursor()
   escondeCursor()
 
   inicializa()
@@ -231,11 +237,9 @@ func main() {
 
   // TODO: Loop do jogo
   for  {
-    moverFantasmas()
-
-    dorme()
-
     atualizarLabirinto()
+
+    moverFantasmas()
 
     if (moverPacGo()) {
       break
@@ -244,5 +248,7 @@ func main() {
     if detectarColisao() {
       terminarJogo()
     }
+
+    dorme()
   }
 }
