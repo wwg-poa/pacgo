@@ -8,6 +8,7 @@ import (
   "log"
   "regexp"
   "errors"
+  "math/rand"
 )
 
 type Posicao struct {
@@ -46,6 +47,7 @@ var labirinto *Labirinto
 var pacgo     *PacGo
 var lista_de_fantasmas []*Fantasma
 var quantidade_de_fantasmas int
+var mapaSinais map[int]string
 
 func construirLabirinto(nomeArquivo string) (*Labirinto, *PacGo, []*Fantasma, error) {
 
@@ -234,9 +236,71 @@ func moverPacGo(m Movimento) {
   }
 }
 
+func random(min, max int) int {
+    return rand.Intn(max - min) + min
+}
+
+func move(fantasma *Fantasma, valorDaPosicaoAtualDoFantasma byte, linhaAtualDoFantasma int, colunaAtualDoFantasma int){
+
+  var direcao = random(0, 4)
+  var sinal = mapaSinais[direcao]
+  fmt.Println(sinal)
+  switch sinal {
+  case "Cima":
+              if linhaAtualDoFantasma == 0{
+                if valorDaPosicaoAtualDoFantasma == ' '{
+                   fantasma.posicao.linha = labirinto.altura - 1
+                 }
+             }else{
+               var posicaoAcimaDoFantasma = labirinto.mapa[fantasma.posicao.linha - 1][fantasma.posicao.coluna]
+               if posicaoAcimaDoFantasma != '#'{
+                 fantasma.posicao.linha = fantasma.posicao.linha - 1
+               }
+             }
+  case "Baixo":
+              if linhaAtualDoFantasma == labirinto.altura - 1{
+                 if valorDaPosicaoAtualDoFantasma == ' '{
+                   fantasma.posicao.linha = 0
+                 }
+              }else{
+                var posicaoAbaixoDoFantasma = labirinto.mapa[fantasma.posicao.linha + 1][fantasma.posicao.coluna]
+                if posicaoAbaixoDoFantasma != '#'{
+                  fantasma.posicao.linha = fantasma.posicao.linha + 1
+                }
+              }
+  case "Direita":
+                if colunaAtualDoFantasma == labirinto.largura-1{
+                  if valorDaPosicaoAtualDoFantasma == ' '{
+                    fantasma.posicao.coluna = 0
+                  }
+                }else{
+                  var posicaoDireitaDofantasma = labirinto.mapa[fantasma.posicao.linha][fantasma.posicao.coluna + 1]
+                  if posicaoDireitaDofantasma != '#'{
+                    fantasma.posicao.coluna = fantasma.posicao.coluna + 1
+                  }
+                }
+  case "Esquerda":
+                 if colunaAtualDoFantasma == 0{
+                   if valorDaPosicaoAtualDoFantasma == ' '{
+                     fantasma.posicao.coluna = labirinto.largura - 1
+                   }
+                 }else{
+                   var posicaoEsquerdaDoFantasma = labirinto.mapa[fantasma.posicao.linha][fantasma.posicao.coluna - 1]
+                   if posicaoEsquerdaDoFantasma != '#'{
+                     fantasma.posicao.coluna = fantasma.posicao.coluna - 1
+                   }
+                 }
+  }
+}
+
 func moverFantasmas() {
-  for i := 0; i < 2; i++{ // mudar para quantidade_de_fantasmas
-    lista_de_fantasmas[i].posicao.coluna += 1
+
+  for i := 0; i < len(lista_de_fantasmas); i++{
+      var valorDaPosicaoAtualDoFantasma = labirinto.mapa[lista_de_fantasmas[i].posicao.linha][lista_de_fantasmas[i].posicao.coluna]
+      var linhaAtualDoFantasma = lista_de_fantasmas[i].posicao.linha
+      var colunaAtualDoFantasma = lista_de_fantasmas[i].posicao.coluna
+      fmt.Println(valorDaPosicaoAtualDoFantasma, linhaAtualDoFantasma, colunaAtualDoFantasma)
+      move(lista_de_fantasmas[i], valorDaPosicaoAtualDoFantasma, linhaAtualDoFantasma, colunaAtualDoFantasma)
   }
 }
 
@@ -258,6 +322,11 @@ func main() {
     fantasma.figura = "\xF0\x9F\x91\xBB"
   }
 
+  mapaSinais = make(map[int]string)
+  mapaSinais[0] = "Cima"
+  mapaSinais[1] = "Baixo"
+  mapaSinais[2] = "Direita"
+  mapaSinais[3] = "Esquerda"
 
   for  {
     atualizarLabirinto()
