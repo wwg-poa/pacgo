@@ -6,11 +6,16 @@ import (
   "os/exec"
 )
 
+type Tela struct{}
+var tela Tela
+
 func inicializa() {
   rawMode := exec.Command("/bin/stty", "cbreak", "-echo")
   rawMode.Stdin = os.Stdin
   _ = rawMode.Run()
   rawMode.Wait()
+
+  tela = Tela{}
 }
 
 func finaliza() {
@@ -40,19 +45,11 @@ func (pacgo *PacGo) incrementaIndice() {
 
 const ESC = "\x1b"
 
-func limpaTela() {
+func (tela *Tela) limpa() {
   fmt.Printf("%s[2J", ESC)
-  moveCursor(Posicao{0,0})
+  tela.moveCursor(Posicao{0,0})
 }
 
-func moveCursor(p Posicao) {
+func (tela *Tela) moveCursor(p Posicao) {
   fmt.Printf("%s[%d;%df", ESC, p.linha + 1, p.coluna + 1)
-}
-
-func escondeCursor() {
-  fmt.Printf("%s?25l", ESC)
-}
-
-func mostraCursor() {
-  fmt.Printf("%s?25h", ESC)
 }

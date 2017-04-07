@@ -139,14 +139,14 @@ func construirLabirinto(nomeArquivo string) error {
 }
 
 func atualizarLabirinto() {
-  limpaTela()
+  tela.limpa()
 
   // Imprime os pontos
-  moveCursor(Posicao{0,0})
+  tela.moveCursor(Posicao{0,0})
   fmt.Printf("%sPontos: %d Vidas: %d%s\n", "\x1b[31;1m", pacgo.pontos, pacgo.vidas, "\x1b[0m")
 
   posicaoInicial := Posicao{2,0}
-  moveCursor(posicaoInicial)
+  tela.moveCursor(posicaoInicial)
 
   var muro = labirinto.figMuro
   if pacgo.pilula == true{
@@ -166,7 +166,7 @@ func atualizarLabirinto() {
   }
 
   // Imprime PacGo
-  moveCursor(posicaoInicial.adiciona(&pacgo.posicao))
+  tela.moveCursor(posicaoInicial.adiciona(&pacgo.posicao))
   if (pacgo.pilula) {
     fmt.Printf("%s", pacgo.figuraBravo)
   } else {
@@ -178,12 +178,12 @@ func atualizarLabirinto() {
 
   // Imprime fantasmas
   for _, fantasma := range fantasmas {
-    moveCursor(posicaoInicial.adiciona(&fantasma.posicao))
+    tela.moveCursor(posicaoInicial.adiciona(&fantasma.posicao))
     fmt.Printf("%s", fantasma.figura)
   }
 
   // Move o cursor para fora do labirinto
-  moveCursor(posicaoInicial.adiciona(&Posicao{labirinto.altura + 2, 0}))
+  tela.moveCursor(posicaoInicial.adiciona(&Posicao{labirinto.altura + 2, 0}))
 }
 
 func detectarColisao() bool {
@@ -352,7 +352,7 @@ func desativarPilula(milisegundos time.Duration) {
 
 func terminarJogo() {
   // pacgo morreu :(
-  moveCursor( Posicao{labirinto.altura + 2, 0} )
+  tela.moveCursor( Posicao{labirinto.altura + 2, 0} )
   fmt.Println("Fim de jogo! Os fantasmas venceram... \xF0\x9F\x98\xAD")
 }
 
@@ -386,7 +386,7 @@ func main() {
   for {
     atualizarLabirinto()
     if labirinto.quantiaPastilhas == 0 {
-      moveCursor( Posicao{labirinto.altura + 2, 0} )
+      tela.moveCursor( Posicao{labirinto.altura + 2, 0} )
       fmt.Println("Fim de jogo! Você venceu! \xF0\x9F\x98\x84")
       break
     }
