@@ -29,7 +29,7 @@ type PacGo struct {
 
 type Contador struct {
   max       int
-  contador  int 
+  contador  int
 }
 
 type Fantasma struct {
@@ -38,11 +38,12 @@ type Fantasma struct {
 }
 
 type Labirinto struct {
-  largura int
-  altura  int
-  mapa    []string
-  figMuro string
-  figSP   string
+  largura       int
+  altura        int
+  mapa          []string
+  figMuro       string
+  figMuroSuper  string
+  figSP         string
 }
 
 type Movimento int
@@ -67,7 +68,7 @@ func criarFantasma(posicao Posicao, figura string) {
 }
 
 func criarPacGo(posicao Posicao, figura string, pilula bool, vidas int) {
-  pacgo = &PacGo{ posicao:posicao, figura: "\xF0\x9F\x98\x83", pilula: false, vidas:3 , 
+  pacgo = &PacGo{ posicao:posicao, figura: "\xF0\x9F\x98\x83", pilula: false, vidas:3 ,
     figuras: []string {"\xF0\x9F\x98\x83", "\xF0\x9F\x98\x8C"}, indiceFig : 0 , contadorFig: Contador{3, 0}}
 }
 
@@ -114,9 +115,9 @@ func construirLabirinto(nomeArquivo string) error {
       return ErrMapNotFound
     }
 
-    labirinto = &Labirinto{largura: len(mapa[0]), altura: len(mapa), mapa : mapa, figMuro: "\x1b[44m \x1b[0m", figSP: "\xF0\x9F\x8D\x84"}
+    labirinto = &Labirinto{largura: len(mapa[0]), altura: len(mapa), mapa : mapa, figMuro: "\x1b[44m \x1b[0m", figMuroSuper: "\x1b[41m \x1b[0m", figSP: "\xF0\x9F\x8D\x84"}
     return nil
-    
+
   } else {
     log.Fatal(err)
     return ErrMapNotFound
@@ -132,10 +133,16 @@ func atualizarLabirinto() {
 
   posicaoInicial := Posicao{2,0}
   moveCursor(posicaoInicial)
+
+  var muro = labirinto.figMuro
+  if pacgo.pilula == true{
+    muro = labirinto.figMuroSuper
+  }
+  
   for _, linha := range labirinto.mapa {
     for _, char := range linha {
       switch char {
-        case '#': fmt.Print(labirinto.figMuro)
+        case '#': fmt.Print(muro)
         case '.': fmt.Print(".")
         case 'P': fmt.Print(labirinto.figSP)
         default:  fmt.Print(" ")
