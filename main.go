@@ -17,12 +17,12 @@ type Posicao struct {
 
 type PacGo struct {
   posicao Posicao
-  figura  rune // emoji
+  figura  string // emoji
 }
 
 type Fantasma struct {
   posicao Posicao
-  figura  rune // emoji
+  figura  string // emoji
 }
 
 type Labirinto struct {
@@ -36,30 +36,11 @@ func (labirinto *Labirinto) imprime() {
   fmt.Println(labirinto.altura)
 
   for _, linha := range labirinto.mapa {
-    fmt.Println(linha)
+    //fmt.Println(linha)
+    fmt.Print(linha)
+    fmt.Print("\r\n")
   }
 }
-
-/*
-var labirinto *Labirinto
-var pacgo     PacGo
-var lista_de_fantasmas []Fantasma
-*/
-
-func (pacgo *PacGo) imprime() {
-  fmt.Println("PacGo")
-  fmt.Println(pacgo.posicao.linha)
-  fmt.Println(pacgo.posicao.coluna)
-}
-
-func imprimeFantasma(fantasmas []*Fantasma) {
-  for indice, fantasma := range fantasmas{
-    fmt.Println("Fantasma : ",indice)
-    fmt.Println(fantasma.posicao.linha)
-    fmt.Println(fantasma.posicao.coluna)
-  }
-}
-
 
 var labirinto *Labirinto
 var pacgo     *PacGo
@@ -90,11 +71,11 @@ func construirLabirinto(nomeArquivo string) (*Labirinto, *PacGo, []*Fantasma, er
       for indice , caracter := range linha {
         switch caracter {
           case 'F': {
-            fantasma := &Fantasma{ posicao: Posicao{len(mapa), indice}, figura: 'F'}
+            fantasma := &Fantasma{ posicao: Posicao{len(mapa), indice}, figura: "F"}
             fantasmas = append(fantasmas, fantasma)
           }
           //fmt.Println(caracter)
-          case 'G': pacgo = &PacGo{ posicao: Posicao{len(mapa), indice}, figura: 'G'}
+          case 'G': pacgo = &PacGo{ posicao: Posicao{len(mapa), indice}, figura: "G"}
         }
       }
 
@@ -136,46 +117,26 @@ func mostraCursor() {
   fmt.Printf("%s?25h", ESC)
 }
 
+
 func atualizarLabirinto() {
   limpaTela()
 
   for _, linha := range labirinto.mapa {
-    for _, char := range linha {
-      ch := fmt.Sprintf("%c", char)
-      fmt.Print(ch/*, ch*/)
-    }
-    fmt.Println("")
+      fmt.Println(linha)
   }
 
   // Atualiza PacGo
   moveCursor(pacgo.posicao)
-  fmt.Printf("%c", pacgo.figura)
+  fmt.Printf("%s", pacgo.figura)
 
-  // TODO: imprime fantasmas
   for _, fantasma := range lista_de_fantasmas {
     moveCursor(fantasma.posicao)
-    fmt.Printf("%c", fantasma.figura)
+    fmt.Printf("%s", fantasma.figura)
   }
 
   // Move o cursor para fora do labirinto
   moveCursor(Posicao{labirinto.altura + 2, 1})
 }
-
-// func criarFantasmas() {
-//   /* Valor inicial utilizado para posicionar um fantasma ao lado do outro */
-//   var contador = 10 // hard coded
-//   lista_de_fantasmas = make([]Fantasma, 2) // mudar para quantidade_de_fantasmas
-
-//   for i := 0; i < 2; i++ { // mudar para quantidade_de_fantasmas
-//       fantasma := new(Fantasma)
-//       fantasma.posicao.linha = 5 // hard coded
-//       fantasma.posicao.coluna = contador
-
-//       lista_de_fantasmas = append(lista_de_fantasmas, *fantasma)
-//       contador += 1
-//       fmt.Printf("Fantasma %d: (%d, %d)\n", i, fantasma.posicao.linha, fantasma.posicao.coluna)
-//   }
-// }
 
 func detectarColisao() bool {
   // TODO: posição do pacgo == posição de algum fantasma?
@@ -199,7 +160,24 @@ const (
 )
 
 func entradaDoUsuario() Movimento {
-  return leTeclado()
+  array := make([]byte, 10)
+
+  lido, _ := os.Stdin.Read(array)
+
+  if lido == 1 && array[0] == 0x1b {
+    return Sai
+  } else if lido == 3 {
+    if array[0] == 0x1b && array[1] == '[' {
+      switch array[2] {
+      case 'A': return Cima
+      case 'B': return Baixo
+      case 'C': return Direita
+      case 'D': return Esquerda
+      }
+    }
+  }
+
+  return Nenhum
 }
 
 func moverPacGo(m Movimento) {
@@ -267,9 +245,6 @@ func dorme() {
 }
 
 func main() {
-  escondeCursor()
-  defer mostraCursor()
-
   inicializa()
   defer finaliza()
 
@@ -277,12 +252,13 @@ func main() {
   labirinto.imprime()
   quantidade_de_fantasmas = len(lista_de_fantasmas)
 
-  // pacgo.imprime()
-  // imprimeFantasma(lista_de_fantasmas)
+  pacgo.figura = "\xF0\x9F\x98\x83"
 
-  //criarFantasmas()
+  for _, fantasma := range lista_de_fantasmas {
+    fantasma.figura = "\xF0\x9F\x91\xBB"
+  }
 
-  // TODO: Loop do jogo
+
   for  {
     atualizarLabirinto()
 

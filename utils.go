@@ -8,12 +8,23 @@ import (
 )
 
 func inicializa() {
-  inicializaTeclado()
+  // inicializaTeclado()
+
+  rawMode := exec.Command("/bin/stty", "cbreak", "-echo")
+  rawMode.Stdin = os.Stdin
+  _ = rawMode.Run()
+  rawMode.Wait()
+
 }
 
 func finaliza() {
   // restore the echoing state when exiting
-  exec.Command("stty", "-F", "/dev/tty", "echo").Run()
+  //exec.Command("stty", "-F", "/dev/tty", "echo").Run()
+
+  rawMode := exec.Command("/bin/stty", "-cbreak", "echo")
+  rawMode.Stdin = os.Stdin
+  _ = rawMode.Run()
+  rawMode.Wait()
 }
 
 var teclas chan byte
@@ -32,12 +43,12 @@ func leTeclado() Movimento {
   select {
     case b := <-teclas:
       if b == 27 {
-        //fmt.Println("1) Leu 27")
-        time.Sleep(1 * time.Millisecond)
+        fmt.Println("1) Leu 27")
+        time.Sleep(100 * time.Millisecond)
 
         select {
           case b = <-teclas:
-            //fmt.Println("2) Leu ", b)
+            fmt.Println("2) Leu ", b)
             b = <- teclas
             switch b {
               case 65:
@@ -64,7 +75,7 @@ func leTeclado() Movimento {
       } else {
         fmt.Println("?: ", b)
       }
-    default:  
+    default:
   }
 
   return Nenhum
@@ -75,5 +86,19 @@ func rotinaTeclado(teclas chan byte) {
   for {
     os.Stdin.Read(b)
     teclas <- b[0]
+  }
+}
+
+func (pacgo *PacGo) imprime() {
+  fmt.Println("PacGo")
+  fmt.Println(pacgo.posicao.linha)
+  fmt.Println(pacgo.posicao.coluna)
+}
+
+func imprimeFantasma(fantasmas []*Fantasma) {
+  for indice, fantasma := range fantasmas{
+    fmt.Println("Fantasma : ",indice)
+    fmt.Println(fantasma.posicao.linha)
+    fmt.Println(fantasma.posicao.coluna)
   }
 }
