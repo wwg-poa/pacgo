@@ -113,7 +113,7 @@ func atualizarLabirinto() {
 
   // Imprime os pontos
   moveCursor(Posicao{0,0})
-  fmt.Printf("%s%d%s\n", "\x1b[31;1m", pacgo.pontos, "\x1b[0m")
+  fmt.Printf("%sPontos: %d%s\n", "\x1b[31;1m", pacgo.pontos, "\x1b[0m")
 
   posicaoInicial := Posicao{2,0}
   moveCursor(posicaoInicial)
