@@ -17,11 +17,12 @@ type Posicao struct {
 }
 
 type PacGo struct {
-  posicao Posicao
-  figura  string // emoji
-  pilula  bool
-  vidas   int
-  pontos  int
+  posicao    Posicao
+  figura     string // emoji
+  pilula     bool
+  vidas      int
+  pontos     int
+  invencivel bool
 }
 
 type Fantasma struct {
@@ -107,7 +108,7 @@ func construirLabirinto(nomeArquivo string) error {
 
     labirinto = &Labirinto{largura: len(mapa[0]), altura: len(mapa), mapa : mapa, figMuro: "\x1b[44m \x1b[0m", figSP: "\xF0\x9F\x8D\x84"}
     return nil
-    
+
   } else {
     log.Fatal(err)
     return ErrMapNotFound
@@ -119,7 +120,7 @@ func atualizarLabirinto() {
 
   // Imprime os pontos
   moveCursor(Posicao{0,0})
-  fmt.Printf("%sPontos: %d%s\n", "\x1b[31;1m", pacgo.pontos, "\x1b[0m")
+  fmt.Printf("%sPontos: %d Vidas: %d%s\n", "\x1b[31;1m", pacgo.pontos, pacgo.vidas, "\x1b[0m")
 
   posicaoInicial := Posicao{2,0}
   moveCursor(posicaoInicial)
@@ -312,6 +313,7 @@ func desativarPilula(milisegundos time.Duration) {
 
 func terminarJogo() {
   // pacgo morreu :(
+  atualizarLabirinto()
   moveCursor( Posicao{labirinto.altura + 2, 0} )
   fmt.Println("Fim de jogo! Os fantasmas venceram... \xF0\x9F\x98\xAD")
 }
@@ -338,8 +340,6 @@ func main() {
 
   canal := make(chan Movimento, 10)
 
-  pacgo.pilula = true
-
   // Processos assincronos
   go entradaDoUsuario(canal)
   go moverFantasmas()
@@ -364,11 +364,27 @@ func main() {
         pacgo.pontos = pacgo.pontos + 500
       } else {
         // pacgo perde vidas
+        if !pacgo.invencivel {
+          pacgo.vidas--
+          if pacgo.vidas < 0 {
+            terminarJogo()
+            break
+          }
+          ativarInvencibilidade(3000)
+        }
       }
     }
 
     dorme(100)
   }
+}
+
+func ativarInvencibilidade(milisegundos time.Duration) {
+  pacgo.invencivel = true
+  go func() {
+    dorme(milisegundos)
+    pacgo.invencivel = false
+  }()
 }
 
 func buscaFantasma(posicao Posicao) (int, *Fantasma) {
