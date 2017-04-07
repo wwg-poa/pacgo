@@ -33,7 +33,8 @@ type Labirinto struct {
   largura int
   altura  int
   mapa    []string
-  figura string
+  figMuro string
+  figSP   string
 }
 
 type Movimento int
@@ -80,7 +81,7 @@ func construirLabirinto(nomeArquivo string) error {
     // inicializa o mapa vazio
     mapa := []string{}
 
-    r, _ := regexp.Compile("[^ #.]")
+    r, _ := regexp.Compile("[^ #.P]")
 
     // cria um leitor para ler linha a linha o arquivo
     scanner := bufio.NewScanner(file)
@@ -104,9 +105,9 @@ func construirLabirinto(nomeArquivo string) error {
       return ErrMapNotFound
     }
 
-    labirinto = &Labirinto{largura: len(mapa[0]), altura: len(mapa), mapa : mapa, figura: "\x1b[44m \x1b[0m"}
+    labirinto = &Labirinto{largura: len(mapa[0]), altura: len(mapa), mapa : mapa, figMuro: "\x1b[44m \x1b[0m", figSP: "\xF0\x9F\x8D\x84"}
     return nil
-
+    
   } else {
     log.Fatal(err)
     return ErrMapNotFound
@@ -125,8 +126,9 @@ func atualizarLabirinto() {
   for _, linha := range labirinto.mapa {
     for _, char := range linha {
       switch char {
-        case '#': fmt.Print(labirinto.figura)
-        case '.': fmt.Print("·")
+        case '#': fmt.Print(labirinto.figMuro)
+        case '.': fmt.Print(".")
+        case 'P': fmt.Print(labirinto.figSP)
         default:  fmt.Print(" ")
       }
     }
@@ -188,8 +190,13 @@ func moverPacGo(m Movimento) {
     pacgo.posicao.linha = novaLinha
     pacgo.posicao.coluna = novaColuna
 
-    if conteudoDoMapa == '.' {
-      pacgo.pontos += 10
+    if (conteudoDoMapa == '.') || (conteudoDoMapa == 'P') {
+      if (conteudoDoMapa == '.') {
+        pacgo.pontos += 10
+      } else {
+        pacgo.pontos += 100
+      }
+
       linha := labirinto.mapa[novaLinha]
       linha = linha[:novaColuna] + " " + linha[novaColuna+1:]
       labirinto.mapa[novaLinha] = linha
