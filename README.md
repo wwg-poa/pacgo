@@ -61,8 +61,31 @@ if char == '#' {
 
 
 ### Esperando pelo movimento do usuário
+O controle do clique das teclas é um pouco mais complexo, mas você só precisa entender a lógica por trás disso. A ideia é diferenciar as teclas pressionadas pelo usuário: se é uma tecla para sair, para fazer o pacgo ir para cima, para baixo ou para os lados. De acordo com a tecla pressionada, determinamos qual é a ação correspondente. 
 
-TODO
+```go
+unc entradaDoUsuario(canal chan<- Movimento) {
+  array := make([]byte, 10)
+
+  for {
+    lido, _ := os.Stdin.Read(array)
+
+    if lido == 1 && array[0] == 0x1b { /* Se a tecla pressionada é o ESC, sai do jogo. */
+      canal <- Sai;
+    } else if lido == 3 {
+      if array[0] == 0x1b && array[1] == '[' {
+        switch array[2] {
+        case 'A': canal <- Cima /* tecla = seta para cima */
+        case 'B': canal <- Baixo /* tecla = seta para baixo */
+        case 'C': canal <- Direita /* tecla = seta para direita */
+        case 'D': canal <- Esquerda /* tecla = seta para esquerda */
+        }
+      }
+    }
+  }
+}
+
+```
 
 
 ### Movimentando o pacgo
