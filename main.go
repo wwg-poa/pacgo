@@ -83,7 +83,6 @@ func construirLabirinto(nomeArquivo string) (*Labirinto, *PacGo, []*Fantasma, er
             fantasma := &Fantasma{ posicao: Posicao{len(mapa), indice}, figura: "\xF0\x9F\x91\xBB"}
             fantasmas = append(fantasmas, fantasma)
           }
-          //fmt.Println(caracter)
           case 'G': pacgo = &PacGo{ posicao: Posicao{len(mapa), indice}, figura: "\xF0\x9F\x98\x83"}
         }
       }
@@ -98,7 +97,7 @@ func construirLabirinto(nomeArquivo string) (*Labirinto, *PacGo, []*Fantasma, er
       return nil, nil, nil, ErrMapNotFound
     }
 
-    l := &Labirinto{largura: len(mapa[0]), altura: len(mapa), mapa : mapa, figura: ""}
+    l := &Labirinto{largura: len(mapa[0]), altura: len(mapa), mapa : mapa, figura: "\x1b[44m \x1b[0m"}
     return l, pacgo, fantasmas, nil
 
   } else {
@@ -113,7 +112,7 @@ func atualizarLabirinto() {
   for _, linha := range labirinto.mapa {
     for _, char := range linha {
       if char == '#' {
-        fmt.Print("\x1b[44m \x1b[0m")
+        fmt.Print(labirinto.figura)
       } else {
         fmt.Print(" ")
       }
