@@ -23,6 +23,14 @@ type PacGo struct {
   vidas      int
   pontos     int
   invencivel bool
+  figuras []string
+  indiceFig int
+  contadorFig Contador
+}
+
+type Contador struct {
+  max       int
+  contador  int
 }
 
 type Fantasma struct {
@@ -41,12 +49,12 @@ type Labirinto struct {
 type Movimento int
 
 const (
-        Cima = iota
-        Baixo
-        Esquerda
-        Direita
-        Nenhum
-        Sai
+  Cima = iota
+  Baixo
+  Esquerda
+  Direita
+  Nenhum
+  Sai
 )
 
 var labirinto  *Labirinto
@@ -60,7 +68,8 @@ func criarFantasma(posicao Posicao, figura string) {
 }
 
 func criarPacGo(posicao Posicao, figura string, pilula bool, vidas int) {
-  pacgo = &PacGo{ posicao:posicao, figura: "\xF0\x9F\x98\x83", pilula: false, vidas:3 }
+  pacgo = &PacGo{ posicao:posicao, figura: "\xF0\x9F\x98\x83", pilula: false, vidas:3 ,
+    figuras: []string {"\xF0\x9F\x98\x83", "\xF0\x9F\x98\x8C"}, indiceFig : 0 , contadorFig: Contador{3, 0}}
 }
 
 func construirLabirinto(nomeArquivo string) error {
@@ -138,7 +147,9 @@ func atualizarLabirinto() {
 
   // Imprime PacGo
   moveCursor(posicaoInicial.adiciona(&pacgo.posicao))
-  fmt.Printf("%s", pacgo.figura)
+  fmt.Printf("%s", pacgo.figuras[pacgo.indiceFig])
+  pacgo.incrementaIndice()
+
 
   // Imprime fantasmas
   for _, fantasma := range fantasmas {
@@ -196,6 +207,7 @@ func moverPacGo(m Movimento) {
         pacgo.pontos += 10
       } else {
         pacgo.pontos += 100
+        ativarPilula()
       }
 
       linha := labirinto.mapa[novaLinha]
@@ -291,10 +303,10 @@ func entradaDoUsuario(canal chan<- Movimento) {
     } else if lido == 3 {
       if array[0] == 0x1b && array[1] == '[' {
         switch array[2] {
-        case 'A': canal <- Cima
-        case 'B': canal <- Baixo
-        case 'C': canal <- Direita
-        case 'D': canal <- Esquerda
+          case 'A': canal <- Cima
+          case 'B': canal <- Baixo
+          case 'C': canal <- Direita
+          case 'D': canal <- Esquerda
         }
       }
     }
@@ -336,7 +348,7 @@ func main() {
     arquivo = ""
   }
 
-  _ = construirLabirinto(arquivo)
+  construirLabirinto(arquivo)
 
   canal := make(chan Movimento, 10)
 
@@ -345,14 +357,14 @@ func main() {
   go moverFantasmas()
 
   var tecla Movimento
-  for  {
+  for {
     atualizarLabirinto()
 
     // canal não-bloqueador
     select {
-    case tecla = <-canal:
+      case tecla = <-canal:
         moverPacGo(tecla)
-    default:
+      default:
     }
     if tecla == Sai { break }
 
