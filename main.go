@@ -126,6 +126,7 @@ func construirLabirinto(nomeArquivo string) error {
       altura: len(mapa),
       mapa: mapa,
       figMuro: "\x1b[44m \x1b[0m",
+      figMuroSuper: "\x1b[41m \x1b[0m",
       figSP: "\xF0\x9F\x8D\x84",
       quantiaPastilhas: quantiaPastilhas,
     }
