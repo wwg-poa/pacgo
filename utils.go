@@ -4,7 +4,6 @@ import (
   "fmt"
   "os"
   "os/exec"
-  "time"
 )
 
 func inicializa() {

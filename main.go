@@ -19,6 +19,7 @@ type Posicao struct {
 type PacGo struct {
   posicao Posicao
   figura  string // emoji
+  pilula  bool
 }
 
 type Fantasma struct {
@@ -271,8 +272,8 @@ func moverFantasmas() {
   }
 }
 
-func dorme(mili time.Duration) {
-  time.Sleep(time.Millisecond * mili)
+func dorme(milisegundos time.Duration) {
+  time.Sleep(time.Millisecond * milisegundos)
 }
 
 func entradaDoUsuario(canal chan<- Movimento) {
@@ -294,6 +295,16 @@ func entradaDoUsuario(canal chan<- Movimento) {
       }
     }
   }
+}
+
+func ativarPilula() {
+  pacgo.pilula = true
+  go desativarPilula(3000)
+}
+
+func desativarPilula(milisegundos time.Duration) {
+  dorme(milisegundos)
+  pacgo.pilula = false
 }
 
 func terminarJogo() {
