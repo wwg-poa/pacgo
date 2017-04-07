@@ -30,6 +30,7 @@ type Labirinto struct {
   largura int
   altura  int
   mapa    []string
+  figura string
 }
 
 type Movimento int
@@ -97,7 +98,7 @@ func construirLabirinto(nomeArquivo string) (*Labirinto, *PacGo, []*Fantasma, er
       return nil, nil, nil, ErrMapNotFound
     }
 
-    l := &Labirinto{largura: len(mapa[0]), altura: len(mapa), mapa : mapa}
+    l := &Labirinto{largura: len(mapa[0]), altura: len(mapa), mapa : mapa, figura: ""}
     return l, pacgo, fantasmas, nil
 
   } else {
@@ -110,7 +111,15 @@ func atualizarLabirinto() {
   limpaTela()
 
   for _, linha := range labirinto.mapa {
-      fmt.Println(linha)
+    for _, char := range linha {
+      if char == '#' {
+        fmt.Print("\x1b[44m \x1b[0m")
+      } else {
+        fmt.Print(" ")
+      }
+      //fmt.Println(linha)
+    }
+    fmt.Println("")
   }
 
   // Imprime PacGo
