@@ -43,16 +43,6 @@ const (
         Sai
 )
 
-func (labirinto *Labirinto) imprime() {
-  fmt.Println(labirinto.largura)
-  fmt.Println(labirinto.altura)
-
-  for _, linha := range labirinto.mapa {
-    fmt.Print(linha)
-    fmt.Print("\r\n")
-  }
-}
-
 var labirinto *Labirinto
 var pacgo     *PacGo
 var lista_de_fantasmas []*Fantasma
@@ -75,7 +65,7 @@ func construirLabirinto(nomeArquivo string) (*Labirinto, *PacGo, []*Fantasma, er
     defer file.Close()
 
     // inicializa o mapa vazio
-    var pacgo *PacGo//{ posicao: Posicao{2, 2}, figura: 'G'}
+    var pacgo *PacGo
     fantasmas := []*Fantasma{}
     mapa := []string{}
 
@@ -89,11 +79,11 @@ func construirLabirinto(nomeArquivo string) (*Labirinto, *PacGo, []*Fantasma, er
       for indice , caracter := range linha {
         switch caracter {
           case 'F': {
-            fantasma := &Fantasma{ posicao: Posicao{len(mapa), indice}, figura: "F"}
+            fantasma := &Fantasma{ posicao: Posicao{len(mapa), indice}, figura: "\xF0\x9F\x91\xBB"}
             fantasmas = append(fantasmas, fantasma)
           }
           //fmt.Println(caracter)
-          case 'G': pacgo = &PacGo{ posicao: Posicao{len(mapa), indice}, figura: "G"}
+          case 'G': pacgo = &PacGo{ posicao: Posicao{len(mapa), indice}, figura: "\xF0\x9F\x98\x83"}
         }
       }
 
@@ -123,11 +113,11 @@ func atualizarLabirinto() {
       fmt.Println(linha)
   }
 
-  // Atualiza PacGo
+  // Imprime PacGo
   moveCursor(pacgo.posicao)
   fmt.Printf("%s", pacgo.figura)
 
-  // Atualiza fantasmas
+  // Imprime fantasmas
   for _, fantasma := range lista_de_fantasmas {
     moveCursor(fantasma.posicao)
     fmt.Printf("%s", fantasma.figura)
@@ -275,7 +265,7 @@ func dorme(mili time.Duration) {
   time.Sleep(time.Millisecond * mili)
 }
 
-func entradaDoUsuario(canal chan Movimento) {
+func entradaDoUsuario(canal chan<- Movimento) {
   array := make([]byte, 10)
 
   for {
@@ -322,22 +312,17 @@ func main() {
 
   labirinto, pacgo, lista_de_fantasmas, _ = construirLabirinto(arquivo)
 
-  pacgo.figura = "\xF0\x9F\x98\x83"
-
-  for _, fantasma := range lista_de_fantasmas {
-    fantasma.figura = "\xF0\x9F\x91\xBB"
-  }
-
   canal := make(chan Movimento, 10)
 
+  // Processos assincronos
   go entradaDoUsuario(canal)
   go moverFantasmas()
-
 
   var tecla Movimento
   for  {
     atualizarLabirinto()
 
+    // canal não-bloqueador
     select {
     case tecla = <-canal:
         moverPacGo(tecla)
