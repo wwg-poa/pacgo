@@ -230,6 +230,7 @@ func moverPacGo(m Movimento) {
     if (conteudoDoMapa == '.') || (conteudoDoMapa == 'P') {
       if (conteudoDoMapa == '.') {
         pacgo.pontos += 10
+        fmt.Print("\x07")
         labirinto.quantiaPastilhas--
       } else {
         pacgo.pontos += 100
