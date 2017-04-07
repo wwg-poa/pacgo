@@ -126,6 +126,10 @@ switch sinal {
 
 ### Movimentando os fantasmas
 
+ Os fantasmas se movimentam de forma semelhante ao pacgo. A diferença é que eles devem se mover sozinhos, independente de uma tecla que o usuário clicar. Para isso, utilizamos a mesma função *move()*.
+ Iteramos sobre a lista de fantasmas, para obter a posição de cada um deles e, assim, movimentar para onde quisermos - isto , movimentá-los de acordo com um algoritmo especial que criamos!
+ 
+ 
 ```go
 
 func moverFantasmas() {
@@ -142,3 +146,5 @@ func moverFantasmas() {
 }
 
 ```
+
+Após movimentar todos os fantasmas do jogo, pedimos para o programa esperar por 200ms, chamando a função *dorme()*.
