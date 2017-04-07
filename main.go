@@ -206,6 +206,7 @@ func moverPacGo(m Movimento) {
         pacgo.pontos += 10
       } else {
         pacgo.pontos += 100
+        ativarPilula()
       }
 
       linha := labirinto.mapa[novaLinha]
@@ -348,8 +349,6 @@ func main() {
   construirLabirinto(arquivo)
 
   canal := make(chan Movimento, 10)
-
-  pacgo.pilula = true
 
   // Processos assincronos
   go entradaDoUsuario(canal)
