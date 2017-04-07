@@ -70,7 +70,7 @@ func construirLabirinto(nomeArquivo string) (*Labirinto, *PacGo, []*Fantasma, er
     fantasmas := []*Fantasma{}
     mapa := []string{}
 
-    r, _ := regexp.Compile("[^ #]")
+    r, _ := regexp.Compile("[^ #.]")
 
     // cria um leitor para ler linha a linha o arquivo
     scanner := bufio.NewScanner(file)
@@ -113,6 +113,8 @@ func atualizarLabirinto() {
     for _, char := range linha {
       if char == '#' {
         fmt.Print(labirinto.figura)
+      } else if char == '.'{
+        fmt.Print(".")
       } else {
         fmt.Print(" ")
       }
