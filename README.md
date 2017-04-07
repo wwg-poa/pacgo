@@ -50,11 +50,12 @@ O trecho de código responsável por esse controle, é mostrado abaixo.
 ``` go
 
 if char == '#' {
-  fmt.Print(labirinto.figura)
+  fmt.Print(labirinto.figura) /* Quando encontrar o caractere '#', imprime a figura do labirinto, ou seja, a parede. */
 } else if char == '.'{
-  fmt.Print(".")
+  fmt.Print(".") /* Quando encontrar o caractere '.', imprime '.', que corresponde a uma pastilha do jogo. */
 } else {
-  fmt.Print(" ")
+  fmt.Print(" ") /* Caso o caractere encontrado não seja '#' ou '.', imprime um espaço em branco. */
 }
 
 ```
+
