@@ -119,14 +119,11 @@ func atualizarLabirinto() {
   moveCursor(posicaoInicial)
   for _, linha := range labirinto.mapa {
     for _, char := range linha {
-      if char == '#' {
-        fmt.Print(labirinto.figura)
-      } else if char == '.'{
-        fmt.Print(".")
-      } else {
-        fmt.Print(" ")
+      switch char {
+        case '#': fmt.Print(labirinto.figura)
+        case '.': fmt.Print(".")
+        default:  fmt.Print(" ")
       }
-      //fmt.Println(linha)
     }
     fmt.Println("")
   }
@@ -142,7 +139,7 @@ func atualizarLabirinto() {
   }
 
   // Move o cursor para fora do labirinto
-  moveCursor(posicaoInicial.adiciona(&Posicao{labirinto.altura + 2, 1}))
+  moveCursor(posicaoInicial.adiciona(&Posicao{labirinto.altura + 2, 0}))
 }
 
 func detectarColisao() bool {
@@ -155,56 +152,43 @@ func detectarColisao() bool {
 }
 
 func moverPacGo(m Movimento) {
-
-  var valorDaPosicaoAtualDaPacgo = labirinto.mapa[pacgo.posicao.linha][pacgo.posicao.coluna]
-  var linhaAtualDaPacgo = pacgo.posicao.linha
-  var colunaAtualDaPacgo = pacgo.posicao.coluna
+  var novaLinha = pacgo.posicao.linha
+  var novaColuna = pacgo.posicao.coluna
 
   switch m {
     case Cima:
-      if linhaAtualDaPacgo == 0 {
-        if valorDaPosicaoAtualDaPacgo == ' ' {
-          pacgo.posicao.linha = labirinto.altura - 1
-        }
-      } else {
-        var posicaoAcimaDaPacgo = labirinto.mapa[pacgo.posicao.linha - 1][pacgo.posicao.coluna]
-        if posicaoAcimaDaPacgo != '#' {
-          pacgo.posicao.linha = pacgo.posicao.linha - 1
-        }
+      novaLinha--
+      if novaLinha < 0 {
+        novaLinha = labirinto.altura - 1
       }
     case Baixo:
-      if linhaAtualDaPacgo == labirinto.altura - 1{
-        if valorDaPosicaoAtualDaPacgo == ' '{
-          pacgo.posicao.linha = 0
-        }
-      } else {
-        var posicaoAbaixoDaPacgo = labirinto.mapa[pacgo.posicao.linha + 1][pacgo.posicao.coluna]
-        if posicaoAbaixoDaPacgo != '#'{
-          pacgo.posicao.linha = pacgo.posicao.linha + 1
-        }
+      novaLinha++
+      if novaLinha >= labirinto.altura {
+        novaLinha = 0
       }
     case Direita:
-      if colunaAtualDaPacgo == labirinto.largura-1{
-        if valorDaPosicaoAtualDaPacgo == ' '{
-          pacgo.posicao.coluna = 0
-        }
-      } else {
-        var posicaoDireitaDaPacgo = labirinto.mapa[pacgo.posicao.linha][pacgo.posicao.coluna + 1]
-        if posicaoDireitaDaPacgo != '#'{
-          pacgo.posicao.coluna = pacgo.posicao.coluna + 1
-        }
+      novaColuna++
+      if novaColuna >= labirinto.largura {
+        novaColuna = 0
       }
     case Esquerda:
-      if colunaAtualDaPacgo == 0 {
-        if valorDaPosicaoAtualDaPacgo == ' ' {
-          pacgo.posicao.coluna = labirinto.largura - 1
-        }
-      } else {
-        var posicaoEsquerdaDaPacgo = labirinto.mapa[pacgo.posicao.linha][pacgo.posicao.coluna - 1]
-        if posicaoEsquerdaDaPacgo != '#'{
-          pacgo.posicao.coluna = pacgo.posicao.coluna - 1
-        }
+      novaColuna--
+      if novaColuna < 0 {
+        novaColuna = labirinto.largura - 1
       }
+  }
+
+  conteudoDoMapa := labirinto.mapa[novaLinha][novaColuna]
+  if conteudoDoMapa != '#' {
+    pacgo.posicao.linha = novaLinha
+    pacgo.posicao.coluna = novaColuna
+
+    if conteudoDoMapa == '.' {
+      pacgo.pontos += 10
+      linha := labirinto.mapa[novaLinha]
+      linha = linha[:novaColuna] + " " + linha[novaColuna+1:]
+      labirinto.mapa[novaLinha] = linha
+    }
   }
 }
 
