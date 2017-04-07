@@ -121,7 +121,7 @@ func atualizarLabirinto() {
     for _, char := range linha {
       switch char {
         case '#': fmt.Print(labirinto.figura)
-        case '.': fmt.Print(".")
+        case '.': fmt.Print("·")
         default:  fmt.Print(" ")
       }
     }
