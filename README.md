@@ -189,3 +189,10 @@ for  {
 ```
 
 A função que termina o jogo está abaixo. 
+```go
+func terminarJogo() {
+  moveCursor( Posicao{labirinto.altura + 2, 0} )
+  fmt.Println("Fim de jogo! Os fantasmas venceram... \xF0\x9F\x98\xAD")
+}
+```
+
