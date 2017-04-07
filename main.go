@@ -320,7 +320,7 @@ func moverFantasmas() {
         //fmt.Println(valorDaPosicaoAtualDoFantasma, linhaAtualDoFantasma, colunaAtualDoFantasma)
         move(fantasmas[i], valorDaPosicaoAtualDoFantasma, linhaAtualDoFantasma, colunaAtualDoFantasma)
     }
-    dorme(300)
+    dorme(200)
   }
 }
 
