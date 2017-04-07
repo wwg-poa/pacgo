@@ -410,7 +410,7 @@ func main() {
         // pacgo perde vidas
         if !pacgo.invencivel {
           pacgo.vidas--
-          if pacgo.vidas < 0 {
+          if pacgo.vidas == 0 {
             terminarJogo()
             break
           }
