@@ -158,10 +158,10 @@ Para detectar se o pacgo encostou em um fantasma, precisamos verificar se a posi
 func detectarColisao() bool {
   for _, fantasma := range lista_de_fantasmas {
     if fantasma.posicao == pacgo.posicao {
-      return true
+      return true /* Se algum fantasma estiver na mesma posição que o pacgo, houve uma colisão. */
     }
   }
-  return false
+  return false /* Senão, não houve colisão. */
 }
 
 
