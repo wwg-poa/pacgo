@@ -18,6 +18,7 @@ type Posicao struct {
 
 type PacGo struct {
   posicao    Posicao
+  posicaoInicial Posicao
   figura     string // emoji
   pilula     bool
   vidas      int
@@ -71,9 +72,17 @@ func criarFantasma(posicao Posicao, figura string) {
 }
 
 func criarPacGo(posicao Posicao, figura string, pilula bool, vidas int) {
-  pacgo = &PacGo{ posicao:posicao, figura: "\xF0\x9F\x98\x83", pilula: false, vidas:3 ,
-    figuras: []string {"\xF0\x9F\x98\x83", "\xF0\x9F\x98\x8C"}, indiceFig : 0 , contadorFig: Contador{3, 0},
-    figuraBravo: "\xF0\x9F\x98\xA1"}
+  pacgo = &PacGo{
+    posicao: posicao,
+    posicaoInicial: posicao,
+    figura: "\xF0\x9F\x98\x83",
+    pilula: false,
+    vidas: 3,
+    figuras: []string {"\xF0\x9F\x98\x83", "\xF0\x9F\x98\x8C"},
+    indiceFig: 0 ,
+    contadorFig: Contador{3, 0},
+    figuraBravo: "\xF0\x9F\x98\xA1",
+  }
 }
 
 func construirLabirinto(nomeArquivo string) error {
@@ -414,6 +423,8 @@ func main() {
             break
           }
           ativarInvencibilidade(3000)
+          pacgo.posicao.linha = pacgo.posicaoInicial.linha
+          pacgo.posicao.coluna = pacgo.posicaoInicial.coluna
         }
       }
     }
