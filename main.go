@@ -32,12 +32,22 @@ type Labirinto struct {
   mapa    []string
 }
 
+type Movimento int
+
+const (
+        Cima = iota
+        Baixo
+        Esquerda
+        Direita
+        Nenhum
+        Sai
+)
+
 func (labirinto *Labirinto) imprime() {
   fmt.Println(labirinto.largura)
   fmt.Println(labirinto.altura)
 
   for _, linha := range labirinto.mapa {
-    //fmt.Println(linha)
     fmt.Print(linha)
     fmt.Print("\r\n")
   }
@@ -46,14 +56,20 @@ func (labirinto *Labirinto) imprime() {
 var labirinto *Labirinto
 var pacgo     *PacGo
 var lista_de_fantasmas []*Fantasma
-var quantidade_de_fantasmas int
 var mapaSinais map[int]string
 
 func construirLabirinto(nomeArquivo string) (*Labirinto, *PacGo, []*Fantasma, error) {
 
   var ErrMapNotFound = errors.New("Não conseguiu ler o arquivo do mapa")
 
-  if file, err := os.Open("./data/mapa.txt"); err == nil {
+  var arquivo string
+  if nomeArquivo == "" {
+    arquivo = "./data/mapa.txt"
+  } else {
+    arquivo = nomeArquivo
+  }
+
+  if file, err := os.Open(arquivo); err == nil {
 
     // fecha depois de ler o arquivo
     defer file.Close()
@@ -100,26 +116,6 @@ func construirLabirinto(nomeArquivo string) (*Labirinto, *PacGo, []*Fantasma, er
   }
 }
 
-const ESC = "\x1b"
-
-func limpaTela() {
-  fmt.Printf("%s[2J", ESC)
-  moveCursor(Posicao{0,0})
-}
-
-func moveCursor(p Posicao) {
-  fmt.Printf("%s[%d;%df", ESC, p.linha + 1, p.coluna + 1)
-}
-
-func escondeCursor() {
-  fmt.Printf("%s?25l", ESC)
-}
-
-func mostraCursor() {
-  fmt.Printf("%s?25h", ESC)
-}
-
-
 func atualizarLabirinto() {
   limpaTela()
 
@@ -131,6 +127,7 @@ func atualizarLabirinto() {
   moveCursor(pacgo.posicao)
   fmt.Printf("%s", pacgo.figura)
 
+  // Atualiza fantasmas
   for _, fantasma := range lista_de_fantasmas {
     moveCursor(fantasma.posicao)
     fmt.Printf("%s", fantasma.figura)
@@ -141,45 +138,12 @@ func atualizarLabirinto() {
 }
 
 func detectarColisao() bool {
-  // TODO: posição do pacgo == posição de algum fantasma?
-  // Ação ?
-  return false
-}
-
-func terminarJogo() {
-  // pacgo morreu :(
-}
-
-type Movimento int
-
-const (
-        Cima = iota
-        Baixo
-        Esquerda
-        Direita
-        Nenhum
-        Sai
-)
-
-func entradaDoUsuario() Movimento {
-  array := make([]byte, 10)
-
-  lido, _ := os.Stdin.Read(array)
-
-  if lido == 1 && array[0] == 0x1b {
-    return Sai
-  } else if lido == 3 {
-    if array[0] == 0x1b && array[1] == '[' {
-      switch array[2] {
-      case 'A': return Cima
-      case 'B': return Baixo
-      case 'C': return Direita
-      case 'D': return Esquerda
-      }
+  for _, fantasma := range lista_de_fantasmas {
+    if fantasma.posicao == pacgo.posicao {
+      return true
     }
   }
-
-  return Nenhum
+  return false
 }
 
 func moverPacGo(m Movimento) {
@@ -244,7 +208,7 @@ func move(fantasma *Fantasma, valorDaPosicaoAtualDoFantasma byte, linhaAtualDoFa
 
   var direcao = random(0, 4)
   var sinal = mapaSinais[direcao]
-  fmt.Println(sinal)
+  //fmt.Println(sinal)
   switch sinal {
   case "Cima":
               if linhaAtualDoFantasma == 0{
@@ -295,32 +259,52 @@ func move(fantasma *Fantasma, valorDaPosicaoAtualDoFantasma byte, linhaAtualDoFa
 
 func moverFantasmas() {
 
-  for i := 0; i < len(lista_de_fantasmas); i++{
-      var valorDaPosicaoAtualDoFantasma = labirinto.mapa[lista_de_fantasmas[i].posicao.linha][lista_de_fantasmas[i].posicao.coluna]
-      var linhaAtualDoFantasma = lista_de_fantasmas[i].posicao.linha
-      var colunaAtualDoFantasma = lista_de_fantasmas[i].posicao.coluna
-      fmt.Println(valorDaPosicaoAtualDoFantasma, linhaAtualDoFantasma, colunaAtualDoFantasma)
-      move(lista_de_fantasmas[i], valorDaPosicaoAtualDoFantasma, linhaAtualDoFantasma, colunaAtualDoFantasma)
+  for {
+    for i := 0; i < len(lista_de_fantasmas); i++{
+        var valorDaPosicaoAtualDoFantasma = labirinto.mapa[lista_de_fantasmas[i].posicao.linha][lista_de_fantasmas[i].posicao.coluna]
+        var linhaAtualDoFantasma = lista_de_fantasmas[i].posicao.linha
+        var colunaAtualDoFantasma = lista_de_fantasmas[i].posicao.coluna
+        //fmt.Println(valorDaPosicaoAtualDoFantasma, linhaAtualDoFantasma, colunaAtualDoFantasma)
+        move(lista_de_fantasmas[i], valorDaPosicaoAtualDoFantasma, linhaAtualDoFantasma, colunaAtualDoFantasma)
+    }
+    dorme(200)
   }
 }
 
-func dorme() {
-  time.Sleep(time.Millisecond * 100)
+func dorme(mili time.Duration) {
+  time.Sleep(time.Millisecond * mili)
+}
+
+func entradaDoUsuario(canal chan Movimento) {
+  array := make([]byte, 10)
+
+  for {
+    lido, _ := os.Stdin.Read(array)
+
+    if lido == 1 && array[0] == 0x1b {
+      canal <- Sai;
+    } else if lido == 3 {
+      if array[0] == 0x1b && array[1] == '[' {
+        switch array[2] {
+        case 'A': canal <- Cima
+        case 'B': canal <- Baixo
+        case 'C': canal <- Direita
+        case 'D': canal <- Esquerda
+        }
+      }
+    }
+  }
+}
+
+func terminarJogo() {
+  // pacgo morreu :(
+  moveCursor( Posicao{labirinto.altura + 2, 0} )
+  fmt.Println("Fim de jogo! Os fantasmas venceram... \xF0\x9F\x98\xAD")
 }
 
 func main() {
   inicializa()
   defer finaliza()
-
-  labirinto, pacgo, lista_de_fantasmas, _ = construirLabirinto("")
-  labirinto.imprime()
-  quantidade_de_fantasmas = len(lista_de_fantasmas)
-
-  pacgo.figura = "\xF0\x9F\x98\x83"
-
-  for _, fantasma := range lista_de_fantasmas {
-    fantasma.figura = "\xF0\x9F\x91\xBB"
-  }
 
   mapaSinais = make(map[int]string)
   mapaSinais[0] = "Cima"
@@ -328,19 +312,44 @@ func main() {
   mapaSinais[2] = "Direita"
   mapaSinais[3] = "Esquerda"
 
+  args    := os.Args[1:]
+  var arquivo string
+  if len(args) >= 1 {
+    arquivo = args[0]
+  } else {
+    arquivo = ""
+  }
+
+  labirinto, pacgo, lista_de_fantasmas, _ = construirLabirinto(arquivo)
+
+  pacgo.figura = "\xF0\x9F\x98\x83"
+
+  for _, fantasma := range lista_de_fantasmas {
+    fantasma.figura = "\xF0\x9F\x91\xBB"
+  }
+
+  canal := make(chan Movimento, 10)
+
+  go entradaDoUsuario(canal)
+  go moverFantasmas()
+
+
+  var tecla Movimento
   for  {
     atualizarLabirinto()
 
-    moverFantasmas()
-
-    m := entradaDoUsuario()
-    if m == Sai { break }
-    moverPacGo(m)
+    select {
+    case tecla = <-canal:
+        moverPacGo(tecla)
+    default:
+    }
+    if tecla == Sai { break }
 
     if detectarColisao() {
       terminarJogo()
+      break;
     }
 
-    dorme()
+    dorme(100)
   }
 }
