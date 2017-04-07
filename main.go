@@ -20,6 +20,7 @@ type PacGo struct {
   posicao Posicao
   figura  string // emoji
   pilula  bool
+  pontos int
 }
 
 type Fantasma struct {
@@ -84,7 +85,7 @@ func construirLabirinto(nomeArquivo string) (*Labirinto, *PacGo, []*Fantasma, er
             fantasma := &Fantasma{ posicao: Posicao{len(mapa), indice}, figura: "\xF0\x9F\x91\xBB"}
             fantasmas = append(fantasmas, fantasma)
           }
-          case 'G': pacgo = &PacGo{ posicao: Posicao{len(mapa), indice}, figura: "\xF0\x9F\x98\x83"}
+          case 'G': pacgo = &PacGo{ posicao: Posicao{len(mapa), indice}, figura: "\xF0\x9F\x98\x83", pontos : 0 }
         }
       }
 
@@ -110,6 +111,12 @@ func construirLabirinto(nomeArquivo string) (*Labirinto, *PacGo, []*Fantasma, er
 func atualizarLabirinto() {
   limpaTela()
 
+    // Imprime os pontos
+  moveCursor(Posicao{0,0})
+  fmt.Printf("Pontos: ", pacgo.pontos)
+
+  posicaoInicial := Posicao{2,0}
+  moveCursor(posicaoInicial)
   for _, linha := range labirinto.mapa {
     for _, char := range linha {
       if char == '#' {
@@ -125,17 +132,17 @@ func atualizarLabirinto() {
   }
 
   // Imprime PacGo
-  moveCursor(pacgo.posicao)
+  moveCursor(posicaoInicial.adiciona(&pacgo.posicao))
   fmt.Printf("%s", pacgo.figura)
 
   // Imprime fantasmas
   for _, fantasma := range lista_de_fantasmas {
-    moveCursor(fantasma.posicao)
+    moveCursor(posicaoInicial.adiciona(&fantasma.posicao))
     fmt.Printf("%s", fantasma.figura)
   }
 
   // Move o cursor para fora do labirinto
-  moveCursor(Posicao{labirinto.altura + 2, 1})
+  moveCursor(posicaoInicial.adiciona(&Posicao{labirinto.altura + 2, 1}))
 }
 
 func detectarColisao() bool {
