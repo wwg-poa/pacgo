@@ -148,3 +148,21 @@ func moverFantasmas() {
 ```
 
 Após movimentar todos os fantasmas do jogo, pedimos para o programa esperar por 200ms, chamando a função *dorme()*.
+
+
+### Detectando uma colisão
+Para detectar se o pacgo encostou em um fantasma, precisamos verificar se a posição do pacgo é a mesma do fantasma. Para isso, o código abaixo é suficiente.
+
+```go
+
+func detectarColisao() bool {
+  for _, fantasma := range lista_de_fantasmas {
+    if fantasma.posicao == pacgo.posicao {
+      return true
+    }
+  }
+  return false
+}
+
+
+```
