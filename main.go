@@ -48,12 +48,12 @@ type Labirinto struct {
 type Movimento int
 
 const (
-        Cima = iota
-        Baixo
-        Esquerda
-        Direita
-        Nenhum
-        Sai
+  Cima = iota
+  Baixo
+  Esquerda
+  Direita
+  Nenhum
+  Sai
 )
 
 var labirinto  *Labirinto
@@ -301,10 +301,10 @@ func entradaDoUsuario(canal chan<- Movimento) {
     } else if lido == 3 {
       if array[0] == 0x1b && array[1] == '[' {
         switch array[2] {
-        case 'A': canal <- Cima
-        case 'B': canal <- Baixo
-        case 'C': canal <- Direita
-        case 'D': canal <- Esquerda
+          case 'A': canal <- Cima
+          case 'B': canal <- Baixo
+          case 'C': canal <- Direita
+          case 'D': canal <- Esquerda
         }
       }
     }
@@ -345,7 +345,7 @@ func main() {
     arquivo = ""
   }
 
-  _ = construirLabirinto(arquivo)
+  construirLabirinto(arquivo)
 
   canal := make(chan Movimento, 10)
 
@@ -356,14 +356,14 @@ func main() {
   go moverFantasmas()
 
   var tecla Movimento
-  for  {
+  for {
     atualizarLabirinto()
 
     // canal não-bloqueador
     select {
-    case tecla = <-canal:
+      case tecla = <-canal:
         moverPacGo(tecla)
-    default:
+      default:
     }
     if tecla == Sai { break }
 
