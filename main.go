@@ -24,6 +24,7 @@ type PacGo struct {
   pontos  int
   figuras []string
   indiceFig int
+  figuraBravo string
   contadorFig Contador
 }
 
@@ -68,7 +69,8 @@ func criarFantasma(posicao Posicao, figura string) {
 
 func criarPacGo(posicao Posicao, figura string, pilula bool, vidas int) {
   pacgo = &PacGo{ posicao:posicao, figura: "\xF0\x9F\x98\x83", pilula: false, vidas:3 , 
-    figuras: []string {"\xF0\x9F\x98\x83", "\xF0\x9F\x98\x8C"}, indiceFig : 0 , contadorFig: Contador{3, 0}}
+    figuras: []string {"\xF0\x9F\x98\x83", "\xF0\x9F\x98\x8C"}, indiceFig : 0 , contadorFig: Contador{3, 0},
+    figuraBravo: "\xF0\x9F\x98\xA1"}
 }
 
 func construirLabirinto(nomeArquivo string) error {
@@ -146,8 +148,13 @@ func atualizarLabirinto() {
 
   // Imprime PacGo
   moveCursor(posicaoInicial.adiciona(&pacgo.posicao))
-  fmt.Printf("%s", pacgo.figuras[pacgo.indiceFig])
-  pacgo.incrementaIndice()
+  if (pacgo.pilula) {
+    fmt.Printf("%s", pacgo.figuraBravo)
+  } else {
+    fmt.Printf("%s", pacgo.figuras[pacgo.indiceFig])
+    pacgo.incrementaIndice()
+  }
+  
 
 
   // Imprime fantasmas
