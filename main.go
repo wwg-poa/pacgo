@@ -19,6 +19,9 @@ type Posicao struct {
 type PacGo struct {
   posicao Posicao
   figura  string // emoji
+  pilula  bool
+  vidas   int
+  pontos  int
 }
 
 type Fantasma struct {
@@ -30,7 +33,8 @@ type Labirinto struct {
   largura int
   altura  int
   mapa    []string
-  figura string
+  figMuro string
+  figSP   string
 }
 
 type Movimento int
@@ -44,12 +48,21 @@ const (
         Sai
 )
 
-var labirinto *Labirinto
-var pacgo     *PacGo
-var lista_de_fantasmas []*Fantasma
+var labirinto  *Labirinto
+var pacgo      *PacGo
+var fantasmas  []*Fantasma
 var mapaSinais map[int]string
 
-func construirLabirinto(nomeArquivo string) (*Labirinto, *PacGo, []*Fantasma, error) {
+func criarFantasma(posicao Posicao, figura string) {
+  fantasma := &Fantasma{ posicao:posicao, figura: "\xF0\x9F\x91\xBB"}
+  fantasmas = append(fantasmas, fantasma)
+}
+
+func criarPacGo(posicao Posicao, figura string, pilula bool, vidas int) {
+  pacgo = &PacGo{ posicao:posicao, figura: "\xF0\x9F\x98\x83", pilula: false, vidas:3 }
+}
+
+func construirLabirinto(nomeArquivo string) error {
 
   var ErrMapNotFound = errors.New("Não conseguiu ler o arquivo do mapa")
 
@@ -66,11 +79,9 @@ func construirLabirinto(nomeArquivo string) (*Labirinto, *PacGo, []*Fantasma, er
     defer file.Close()
 
     // inicializa o mapa vazio
-    var pacgo *PacGo
-    fantasmas := []*Fantasma{}
     mapa := []string{}
 
-    r, _ := regexp.Compile("[^ #]")
+    r, _ := regexp.Compile("[^ #.P]")
 
     // cria um leitor para ler linha a linha o arquivo
     scanner := bufio.NewScanner(file)
@@ -79,12 +90,8 @@ func construirLabirinto(nomeArquivo string) (*Labirinto, *PacGo, []*Fantasma, er
 
       for indice , caracter := range linha {
         switch caracter {
-          case 'F': {
-            fantasma := &Fantasma{ posicao: Posicao{len(mapa), indice}, figura: "\xF0\x9F\x91\xBB"}
-            fantasmas = append(fantasmas, fantasma)
-          }
-          //fmt.Println(caracter)
-          case 'G': pacgo = &PacGo{ posicao: Posicao{len(mapa), indice}, figura: "\xF0\x9F\x98\x83"}
+          case 'F': criarFantasma( Posicao{len(mapa), indice}, "\xF0\x9F\x91\xBB" )
+          case 'G': criarPacGo( Posicao{len(mapa), indice}, "\xF0\x9F\x98\x83", false, 3 )
         }
       }
 
@@ -95,49 +102,55 @@ func construirLabirinto(nomeArquivo string) (*Labirinto, *PacGo, []*Fantasma, er
     // verifica se teve erro o leitor
     if err = scanner.Err(); err != nil {
       log.Fatal(err)
-      return nil, nil, nil, ErrMapNotFound
+      return ErrMapNotFound
     }
 
-    l := &Labirinto{largura: len(mapa[0]), altura: len(mapa), mapa : mapa, figura: ""}
-    return l, pacgo, fantasmas, nil
-
+    labirinto = &Labirinto{largura: len(mapa[0]), altura: len(mapa), mapa : mapa, figMuro: "\x1b[44m \x1b[0m", figSP: "\xF0\x9F\x8D\x84"}
+    return nil
+    
   } else {
     log.Fatal(err)
-    return nil, nil, nil, ErrMapNotFound
+    return ErrMapNotFound
   }
 }
 
 func atualizarLabirinto() {
   limpaTela()
 
+  // Imprime os pontos
+  moveCursor(Posicao{0,0})
+  fmt.Printf("%sPontos: %d%s\n", "\x1b[31;1m", pacgo.pontos, "\x1b[0m")
+
+  posicaoInicial := Posicao{2,0}
+  moveCursor(posicaoInicial)
   for _, linha := range labirinto.mapa {
     for _, char := range linha {
-      if char == '#' {
-        fmt.Print("\x1b[44m \x1b[0m")
-      } else {
-        fmt.Print(" ")
+      switch char {
+        case '#': fmt.Print(labirinto.figMuro)
+        case '.': fmt.Print(".")
+        case 'P': fmt.Print(labirinto.figSP)
+        default:  fmt.Print(" ")
       }
-      //fmt.Println(linha)
     }
     fmt.Println("")
   }
 
   // Imprime PacGo
-  moveCursor(pacgo.posicao)
+  moveCursor(posicaoInicial.adiciona(&pacgo.posicao))
   fmt.Printf("%s", pacgo.figura)
 
   // Imprime fantasmas
-  for _, fantasma := range lista_de_fantasmas {
-    moveCursor(fantasma.posicao)
+  for _, fantasma := range fantasmas {
+    moveCursor(posicaoInicial.adiciona(&fantasma.posicao))
     fmt.Printf("%s", fantasma.figura)
   }
 
   // Move o cursor para fora do labirinto
-  moveCursor(Posicao{labirinto.altura + 2, 1})
+  moveCursor(posicaoInicial.adiciona(&Posicao{labirinto.altura + 2, 0}))
 }
 
 func detectarColisao() bool {
-  for _, fantasma := range lista_de_fantasmas {
+  for _, fantasma := range fantasmas {
     if fantasma.posicao == pacgo.posicao {
       return true
     }
@@ -146,55 +159,47 @@ func detectarColisao() bool {
 }
 
 func moverPacGo(m Movimento) {
-
-  var valorDaPosicaoAtualDaPacgo = labirinto.mapa[pacgo.posicao.linha][pacgo.posicao.coluna]
-  var linhaAtualDaPacgo = pacgo.posicao.linha
-  var colunaAtualDaPacgo = pacgo.posicao.coluna
+  var novaLinha = pacgo.posicao.linha
+  var novaColuna = pacgo.posicao.coluna
 
   switch m {
-  case Cima:
-             if linhaAtualDaPacgo == 0{
-                 if valorDaPosicaoAtualDaPacgo == ' '{
-                   pacgo.posicao.linha = labirinto.altura - 1
-                 }
-             }else{
-               var posicaoAcimaDaPacgo = labirinto.mapa[pacgo.posicao.linha - 1][pacgo.posicao.coluna]
-               if posicaoAcimaDaPacgo != '#'{
-                 pacgo.posicao.linha = pacgo.posicao.linha - 1
-               }
-             }
-  case Baixo:
-             if linhaAtualDaPacgo == labirinto.altura - 1{
-                 if valorDaPosicaoAtualDaPacgo == ' '{
-                   pacgo.posicao.linha = 0
-                 }
-             }else{
-               var posicaoAbaixoDaPacgo = labirinto.mapa[pacgo.posicao.linha + 1][pacgo.posicao.coluna]
-               if posicaoAbaixoDaPacgo != '#'{
-                 pacgo.posicao.linha = pacgo.posicao.linha + 1
-               }
-             }
-  case Direita:
-             if colunaAtualDaPacgo == labirinto.largura-1{
-                 if valorDaPosicaoAtualDaPacgo == ' '{
-                   pacgo.posicao.coluna = 0
-                 }
-             }else{
-               var posicaoDireitaDaPacgo = labirinto.mapa[pacgo.posicao.linha][pacgo.posicao.coluna + 1]
-               if posicaoDireitaDaPacgo != '#'{
-                 pacgo.posicao.coluna = pacgo.posicao.coluna + 1
-               }
-             }
-  case Esquerda:
-    if colunaAtualDaPacgo == 0{
-      if valorDaPosicaoAtualDaPacgo == ' '{
-        pacgo.posicao.coluna = labirinto.largura - 1
+    case Cima:
+      novaLinha--
+      if novaLinha < 0 {
+        novaLinha = labirinto.altura - 1
       }
-    }else{
-      var posicaoEsquerdaDaPacgo = labirinto.mapa[pacgo.posicao.linha][pacgo.posicao.coluna - 1]
-      if posicaoEsquerdaDaPacgo != '#'{
-        pacgo.posicao.coluna = pacgo.posicao.coluna - 1
+    case Baixo:
+      novaLinha++
+      if novaLinha >= labirinto.altura {
+        novaLinha = 0
       }
+    case Direita:
+      novaColuna++
+      if novaColuna >= labirinto.largura {
+        novaColuna = 0
+      }
+    case Esquerda:
+      novaColuna--
+      if novaColuna < 0 {
+        novaColuna = labirinto.largura - 1
+      }
+  }
+
+  conteudoDoMapa := labirinto.mapa[novaLinha][novaColuna]
+  if conteudoDoMapa != '#' {
+    pacgo.posicao.linha = novaLinha
+    pacgo.posicao.coluna = novaColuna
+
+    if (conteudoDoMapa == '.') || (conteudoDoMapa == 'P') {
+      if (conteudoDoMapa == '.') {
+        pacgo.pontos += 10
+      } else {
+        pacgo.pontos += 100
+      }
+
+      linha := labirinto.mapa[novaLinha]
+      linha = linha[:novaColuna] + " " + linha[novaColuna+1:]
+      labirinto.mapa[novaLinha] = linha
     }
   }
 }
@@ -259,19 +264,19 @@ func move(fantasma *Fantasma, valorDaPosicaoAtualDoFantasma byte, linhaAtualDoFa
 func moverFantasmas() {
 
   for {
-    for i := 0; i < len(lista_de_fantasmas); i++{
-        var valorDaPosicaoAtualDoFantasma = labirinto.mapa[lista_de_fantasmas[i].posicao.linha][lista_de_fantasmas[i].posicao.coluna]
-        var linhaAtualDoFantasma = lista_de_fantasmas[i].posicao.linha
-        var colunaAtualDoFantasma = lista_de_fantasmas[i].posicao.coluna
+    for i := 0; i < len(fantasmas); i++{
+        var valorDaPosicaoAtualDoFantasma = labirinto.mapa[fantasmas[i].posicao.linha][fantasmas[i].posicao.coluna]
+        var linhaAtualDoFantasma = fantasmas[i].posicao.linha
+        var colunaAtualDoFantasma = fantasmas[i].posicao.coluna
         //fmt.Println(valorDaPosicaoAtualDoFantasma, linhaAtualDoFantasma, colunaAtualDoFantasma)
-        move(lista_de_fantasmas[i], valorDaPosicaoAtualDoFantasma, linhaAtualDoFantasma, colunaAtualDoFantasma)
+        move(fantasmas[i], valorDaPosicaoAtualDoFantasma, linhaAtualDoFantasma, colunaAtualDoFantasma)
     }
-    dorme(200)
+    dorme(300)
   }
 }
 
-func dorme(mili time.Duration) {
-  time.Sleep(time.Millisecond * mili)
+func dorme(milisegundos time.Duration) {
+  time.Sleep(time.Millisecond * milisegundos)
 }
 
 func entradaDoUsuario(canal chan<- Movimento) {
@@ -293,6 +298,16 @@ func entradaDoUsuario(canal chan<- Movimento) {
       }
     }
   }
+}
+
+func ativarPilula() {
+  pacgo.pilula = true
+  go desativarPilula(10000)
+}
+
+func desativarPilula(milisegundos time.Duration) {
+  dorme(milisegundos)
+  pacgo.pilula = false
 }
 
 func terminarJogo() {
@@ -319,9 +334,11 @@ func main() {
     arquivo = ""
   }
 
-  labirinto, pacgo, lista_de_fantasmas, _ = construirLabirinto(arquivo)
+  _ = construirLabirinto(arquivo)
 
   canal := make(chan Movimento, 10)
+
+  pacgo.pilula = true
 
   // Processos assincronos
   go entradaDoUsuario(canal)
@@ -340,10 +357,35 @@ func main() {
     if tecla == Sai { break }
 
     if detectarColisao() {
-      terminarJogo()
-      break;
+      if pacgo.pilula {
+        _, f := buscaFantasma(pacgo.posicao)
+        go criarFantasmaTemporizado(f, 5000)
+        matarFantasma(f)
+        pacgo.pontos = pacgo.pontos + 500
+      } else {
+        // pacgo perde vidas
+      }
     }
 
     dorme(100)
   }
+}
+
+func buscaFantasma(posicao Posicao) (int, *Fantasma) {
+  for i, fantasma := range fantasmas {
+    if fantasma.posicao == posicao {
+      return i, fantasma
+    }
+  }
+  return -1, nil
+}
+
+func criarFantasmaTemporizado(fantasma *Fantasma, milisegundos time.Duration) {
+  dorme(milisegundos)
+  criarFantasma(fantasma.posicao, fantasma.figura)
+}
+
+func matarFantasma(fantasma *Fantasma) {
+  pos, _ := buscaFantasma(fantasma.posicao)
+  fantasmas = append(fantasmas[:pos], fantasmas[pos+1:]...)
 }
