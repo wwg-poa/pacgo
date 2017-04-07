@@ -111,9 +111,9 @@ func construirLabirinto(nomeArquivo string) (*Labirinto, *PacGo, []*Fantasma, er
 func atualizarLabirinto() {
   limpaTela()
 
-    // Imprime os pontos
+  // Imprime os pontos
   moveCursor(Posicao{0,0})
-  fmt.Printf("Pontos: ", pacgo.pontos)
+  fmt.Printf("%s%d%s\n", "\x1b[31;1m", pacgo.pontos, "\x1b[0m")
 
   posicaoInicial := Posicao{2,0}
   moveCursor(posicaoInicial)
