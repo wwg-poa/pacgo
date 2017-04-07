@@ -166,3 +166,26 @@ func detectarColisao() bool {
 
 
 ```
+
+
+### Fim do jogo
+O jogo se passa num loop que espera por uma tecla do usuário. Se a tecla for tecla de movimento, movimentamos o pacgo; se for a tecla para sair, saímos do jogo. Caso o pacgo morra (colida com um fantasma), o jogo termina.
+
+```go
+for  {
+    atualizarLabirinto() /* Imprime na tela as novas posições do pacgo e dos fantasmas. */
+
+    select {
+    case tecla = <-canal:
+        moverPacGo(tecla) /* Caso o usuário clique em uma tecla de movimento, movimenta o pacgo na direção desejada. */
+    default:
+    }
+    if tecla == Sai { break } /* Caso o usuário clique na tecla para sair, sai do jogo. */
+
+    if detectarColisao() {
+      terminarJogo() /* Se houve uma colisão do pacgo com um fantasma, termina o jogo. */
+      break;
+    }
+```
+
+A função que termina o jogo está abaixo. 
