@@ -46,6 +46,7 @@ type Labirinto struct {
   figMuro       string
   figMuroSuper  string
   figSP         string
+  quantiaPastilhas int
 }
 
 type Movimento int
@@ -98,6 +99,7 @@ func construirLabirinto(nomeArquivo string) error {
 
     // cria um leitor para ler linha a linha o arquivo
     scanner := bufio.NewScanner(file)
+    quantiaPastilhas := 0
     for scanner.Scan() {
       linha := scanner.Text()
 
@@ -105,6 +107,7 @@ func construirLabirinto(nomeArquivo string) error {
         switch caracter {
           case 'F': criarFantasma( Posicao{len(mapa), indice}, "\xF0\x9F\x91\xBB" )
           case 'G': criarPacGo( Posicao{len(mapa), indice}, "\xF0\x9F\x98\x83", false, 3 )
+          case '.': quantiaPastilhas += 1
         }
       }
 
@@ -118,7 +121,14 @@ func construirLabirinto(nomeArquivo string) error {
       return ErrMapNotFound
     }
 
-    labirinto = &Labirinto{largura: len(mapa[0]), altura: len(mapa), mapa : mapa, figMuro: "\x1b[44m \x1b[0m", figMuroSuper: "\x1b[41m \x1b[0m", figSP: "\xF0\x9F\x8D\x84"}
+    labirinto = &Labirinto{
+      largura: len(mapa[0]),
+      altura: len(mapa),
+      mapa: mapa,
+      figMuro: "\x1b[44m \x1b[0m",
+      figSP: "\xF0\x9F\x8D\x84",
+      quantiaPastilhas: quantiaPastilhas,
+    }
     return nil
 
   } else {
@@ -219,6 +229,7 @@ func moverPacGo(m Movimento) {
     if (conteudoDoMapa == '.') || (conteudoDoMapa == 'P') {
       if (conteudoDoMapa == '.') {
         pacgo.pontos += 10
+        labirinto.quantiaPastilhas--
       } else {
         pacgo.pontos += 100
         ativarPilula()
@@ -373,6 +384,11 @@ func main() {
   var tecla Movimento
   for {
     atualizarLabirinto()
+    if labirinto.quantiaPastilhas == 0 {
+      moveCursor( Posicao{labirinto.altura + 2, 0} )
+      fmt.Println("Fim de jogo! Você venceu! \xF0\x9F\x98\x84")
+      break
+    }
 
     // canal não-bloqueador
     select {
