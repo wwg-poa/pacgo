@@ -153,50 +153,50 @@ func moverPacGo(m Movimento) {
   var colunaAtualDaPacgo = pacgo.posicao.coluna
 
   switch m {
-  case Cima:
-             if linhaAtualDaPacgo == 0{
-                 if valorDaPosicaoAtualDaPacgo == ' '{
-                   pacgo.posicao.linha = labirinto.altura - 1
-                 }
-             }else{
-               var posicaoAcimaDaPacgo = labirinto.mapa[pacgo.posicao.linha - 1][pacgo.posicao.coluna]
-               if posicaoAcimaDaPacgo != '#'{
-                 pacgo.posicao.linha = pacgo.posicao.linha - 1
-               }
-             }
-  case Baixo:
-             if linhaAtualDaPacgo == labirinto.altura - 1{
-                 if valorDaPosicaoAtualDaPacgo == ' '{
-                   pacgo.posicao.linha = 0
-                 }
-             }else{
-               var posicaoAbaixoDaPacgo = labirinto.mapa[pacgo.posicao.linha + 1][pacgo.posicao.coluna]
-               if posicaoAbaixoDaPacgo != '#'{
-                 pacgo.posicao.linha = pacgo.posicao.linha + 1
-               }
-             }
-  case Direita:
-             if colunaAtualDaPacgo == labirinto.largura-1{
-                 if valorDaPosicaoAtualDaPacgo == ' '{
-                   pacgo.posicao.coluna = 0
-                 }
-             }else{
-               var posicaoDireitaDaPacgo = labirinto.mapa[pacgo.posicao.linha][pacgo.posicao.coluna + 1]
-               if posicaoDireitaDaPacgo != '#'{
-                 pacgo.posicao.coluna = pacgo.posicao.coluna + 1
-               }
-             }
-  case Esquerda:
-    if colunaAtualDaPacgo == 0{
-      if valorDaPosicaoAtualDaPacgo == ' '{
-        pacgo.posicao.coluna = labirinto.largura - 1
+    case Cima:
+      if linhaAtualDaPacgo == 0 {
+        if valorDaPosicaoAtualDaPacgo == ' ' {
+          pacgo.posicao.linha = labirinto.altura - 1
+        }
+      } else {
+        var posicaoAcimaDaPacgo = labirinto.mapa[pacgo.posicao.linha - 1][pacgo.posicao.coluna]
+        if posicaoAcimaDaPacgo != '#' {
+          pacgo.posicao.linha = pacgo.posicao.linha - 1
+        }
       }
-    }else{
-      var posicaoEsquerdaDaPacgo = labirinto.mapa[pacgo.posicao.linha][pacgo.posicao.coluna - 1]
-      if posicaoEsquerdaDaPacgo != '#'{
-        pacgo.posicao.coluna = pacgo.posicao.coluna - 1
+    case Baixo:
+      if linhaAtualDaPacgo == labirinto.altura - 1{
+        if valorDaPosicaoAtualDaPacgo == ' '{
+          pacgo.posicao.linha = 0
+        }
+      } else {
+        var posicaoAbaixoDaPacgo = labirinto.mapa[pacgo.posicao.linha + 1][pacgo.posicao.coluna]
+        if posicaoAbaixoDaPacgo != '#'{
+          pacgo.posicao.linha = pacgo.posicao.linha + 1
+        }
       }
-    }
+    case Direita:
+      if colunaAtualDaPacgo == labirinto.largura-1{
+        if valorDaPosicaoAtualDaPacgo == ' '{
+          pacgo.posicao.coluna = 0
+        }
+      } else {
+        var posicaoDireitaDaPacgo = labirinto.mapa[pacgo.posicao.linha][pacgo.posicao.coluna + 1]
+        if posicaoDireitaDaPacgo != '#'{
+          pacgo.posicao.coluna = pacgo.posicao.coluna + 1
+        }
+      }
+    case Esquerda:
+      if colunaAtualDaPacgo == 0 {
+        if valorDaPosicaoAtualDaPacgo == ' ' {
+          pacgo.posicao.coluna = labirinto.largura - 1
+        }
+      } else {
+        var posicaoEsquerdaDaPacgo = labirinto.mapa[pacgo.posicao.linha][pacgo.posicao.coluna - 1]
+        if posicaoEsquerdaDaPacgo != '#'{
+          pacgo.posicao.coluna = pacgo.posicao.coluna - 1
+        }
+      }
   }
 }
 
