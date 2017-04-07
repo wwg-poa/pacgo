@@ -20,6 +20,10 @@ func finaliza() {
   rawMode.Wait()
 }
 
+func (posicao1 *Posicao) adiciona(posicao2 *Posicao) (Posicao){
+  return Posicao{posicao1.linha + posicao2.linha, posicao1.coluna + posicao2.coluna}
+}
+
 const ESC = "\x1b"
 
 func limpaTela() {
