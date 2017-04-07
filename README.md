@@ -4,7 +4,7 @@
 
 - Inicialização de dados
 - Criação do labirinto, a partir de um arquivo de texto
-- Espera por movimento do usuário (aguarda por uma tecla pressionada)
+- Espera por movimento do usuário (tecla pressionada)
 - Movimentação do pacgo
 - Movimetação dos fantasmas
 - Detecção de colisão
@@ -59,3 +59,32 @@ if char == '#' {
 
 ```
 
+
+### Esperando pelo movimento do usuário
+
+TODO
+
+
+### Movimentando o pacgo
+
+TODO
+
+### Movimentando os fantasmas
+
+```go
+
+func moverFantasmas() {
+
+  for {
+    for i := 0; i < len(lista_de_fantasmas); i++{
+        var valorDaPosicaoAtualDoFantasma = labirinto.mapa[lista_de_fantasmas[i].posicao.linha][lista_de_fantasmas[i].posicao.coluna]
+        var linhaAtualDoFantasma = lista_de_fantasmas[i].posicao.linha
+        var colunaAtualDoFantasma = lista_de_fantasmas[i].posicao.coluna
+        //fmt.Println(valorDaPosicaoAtualDoFantasma, linhaAtualDoFantasma, colunaAtualDoFantasma)
+        move(lista_de_fantasmas[i], valorDaPosicaoAtualDoFantasma, linhaAtualDoFantasma, colunaAtualDoFantasma)
+    }
+    dorme(200)
+  }
+}
+
+```
