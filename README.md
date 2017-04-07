@@ -67,7 +67,62 @@ TODO
 
 ### Movimentando o pacgo
 
-TODO
+Para movimentar todos os personagens do jogo, utilizamos uma função chamada *move()*. Essa função é responsável por verificar em qual seta o usuário clicou e o que deve ser feito. Por exemplo, se usuário clica na setinha que aponta para cima, devemos movimentar o pacgo para a linha de cima - caso não tenha uma parede ou algum outro objeto atrapalhando. Isso significa que se o pacgo está na linha 1, deve ir para a linha 0; se está na linha 10, deve ir para a linha 9, e assim por diante. 
+
+O comportamento é análogo para qualquer direção que o usuário selecionar: para movimentar o pacgo para baixo, subtraimos 1 unidade da linha atual do pacgo; para direita, somamos 1; e para esquerda, subtraímos 1. O código abaixo é extenso, mas implementa este comportamento.
+
+Um detalhe importante é que se o pacgo estiver na linha 0 (linha na extremidade de cima) e o usuário mandar ele ir para cima, o pacgo aparece na última linha do labirinto, como se fosse um portal! Por isso, temos testes para verificar em qual linha o pacgo está, antes de movimentar o pacgo.
+
+```go
+
+switch sinal {
+  case "Cima":
+              if linhaAtualDoFantasma == 0{
+                if valorDaPosicaoAtualDoFantasma == ' '{
+                   fantasma.posicao.linha = labirinto.altura - 1
+                 }
+             }else{
+               var posicaoAcimaDoFantasma = labirinto.mapa[fantasma.posicao.linha - 1][fantasma.posicao.coluna]
+               if posicaoAcimaDoFantasma != '#'{
+                 fantasma.posicao.linha = fantasma.posicao.linha - 1
+               }
+             }
+  case "Baixo":
+              if linhaAtualDoFantasma == labirinto.altura - 1{
+                 if valorDaPosicaoAtualDoFantasma == ' '{
+                   fantasma.posicao.linha = 0
+                 }
+              }else{
+                var posicaoAbaixoDoFantasma = labirinto.mapa[fantasma.posicao.linha + 1][fantasma.posicao.coluna]
+                if posicaoAbaixoDoFantasma != '#'{
+                  fantasma.posicao.linha = fantasma.posicao.linha + 1
+                }
+              }
+  case "Direita":
+                if colunaAtualDoFantasma == labirinto.largura-1{
+                  if valorDaPosicaoAtualDoFantasma == ' '{
+                    fantasma.posicao.coluna = 0
+                  }
+                }else{
+                  var posicaoDireitaDofantasma = labirinto.mapa[fantasma.posicao.linha][fantasma.posicao.coluna + 1]
+                  if posicaoDireitaDofantasma != '#'{
+                    fantasma.posicao.coluna = fantasma.posicao.coluna + 1
+                  }
+                }
+  case "Esquerda":
+                 if colunaAtualDoFantasma == 0{
+                   if valorDaPosicaoAtualDoFantasma == ' '{
+                     fantasma.posicao.coluna = labirinto.largura - 1
+                   }
+                 }else{
+                   var posicaoEsquerdaDoFantasma = labirinto.mapa[fantasma.posicao.linha][fantasma.posicao.coluna - 1]
+                   if posicaoEsquerdaDoFantasma != '#'{
+                     fantasma.posicao.coluna = fantasma.posicao.coluna - 1
+                   }
+                 }
+  }
+
+```
 
 ### Movimentando os fantasmas
 
@@ -80,7 +135,6 @@ func moverFantasmas() {
         var valorDaPosicaoAtualDoFantasma = labirinto.mapa[lista_de_fantasmas[i].posicao.linha][lista_de_fantasmas[i].posicao.coluna]
         var linhaAtualDoFantasma = lista_de_fantasmas[i].posicao.linha
         var colunaAtualDoFantasma = lista_de_fantasmas[i].posicao.coluna
-        //fmt.Println(valorDaPosicaoAtualDoFantasma, linhaAtualDoFantasma, colunaAtualDoFantasma)
         move(lista_de_fantasmas[i], valorDaPosicaoAtualDoFantasma, linhaAtualDoFantasma, colunaAtualDoFantasma)
     }
     dorme(200)
