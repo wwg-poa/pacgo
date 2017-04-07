@@ -54,7 +54,7 @@ var fantasmas  []*Fantasma
 var mapaSinais map[int]string
 
 func criarFantasma(posicao Posicao, figura string) {
-  fantasma := &Fantasma{ posicao:posicao, figura: "\xF0\x9F\x91\xBB"}
+  fantasma := &Fantasma{ posicao:posicao, figura: figura}
   fantasmas = append(fantasmas, fantasma)
 }
 
@@ -388,4 +388,5 @@ func criarFantasmaTemporizado(fantasma *Fantasma, milisegundos time.Duration) {
 func matarFantasma(fantasma *Fantasma) {
   pos, _ := buscaFantasma(fantasma.posicao)
   fantasmas = append(fantasmas[:pos], fantasmas[pos+1:]...)
+  fmt.Print("\x07")
 }
