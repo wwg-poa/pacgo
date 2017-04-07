@@ -352,7 +352,6 @@ func desativarPilula(milisegundos time.Duration) {
 
 func terminarJogo() {
   // pacgo morreu :(
-  atualizarLabirinto()
   moveCursor( Posicao{labirinto.altura + 2, 0} )
   fmt.Println("Fim de jogo! Os fantasmas venceram... \xF0\x9F\x98\xAD")
 }
@@ -410,7 +409,7 @@ func main() {
         // pacgo perde vidas
         if !pacgo.invencivel {
           pacgo.vidas--
-          if pacgo.vidas == 0 {
+          if pacgo.vidas < 0 {
             terminarJogo()
             break
           }
