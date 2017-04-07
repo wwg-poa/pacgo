@@ -17,6 +17,7 @@
 ### Criação do labirinto
  O labirinto é criado a partir de um arquivo de texto. Isto significa que vamos fazer o nosso programa ler um arquivo de texto para saber como imprimir cada item. Abaixo, temos uma configuração de exemplo do labirinto.
 
+```
  ############################
  #............##............#
  #.####.#####.##.#####.####.#
@@ -41,7 +42,7 @@
  #.##########.##.##########.#
  #..........................#
  ############################
-
+```
 Sabendo que esses caracteres estarão em um arquivo txt externo, o nosso trabalho é dizer para o nosso programa o que significam cada um dos símbolos #, ., -, F, e G. Além disso, dizemos o que deve ser impresso na tela, em vez do caractere em questão - como você pode reparar, o nosso jogo possui paredes coloridas, pastilhas e emojis.
 
 O trecho de código responsável por esse controle, é mostrado abaixo.
