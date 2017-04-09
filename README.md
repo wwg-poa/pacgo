@@ -1,220 +1,107 @@
-# pacgo
+# Tutorial Women Who Go POA
 
-## Estrutura do jogo
+Seja bem vinda ao tutorial do Women Who Go Porto Alegre!
 
-- Inicialização de dados
-- Criação do labirinto, a partir de um arquivo de texto
-- Espera por movimento do usuário (tecla pressionada)
-- Movimentação do pacgo
-- Movimetação dos fantasmas
-- Detecção de colisão
-- Fim do jogo
+O objetivo deste tutorial é mostrar que programação não é uma coisa de outro mundo e pode ser muito divertido. Nosso objetivo é construir um jogo do zero, utilizando a linguagem de programação Go.
 
+As linguagens de programação são a forma como nós nos comunicamos com os computadores e dizemos para eles o que queremos que eles façam. Além do Go existem inúmeras outras linguagens, cada uma com as suas particularidades.
 
-### Inicialização de dados
- Esta parte você pode abstrair. É o momento em que inicilizamos os dados necessários para o jogo, isto é, configuramos o terminal e executamos alguns comandos.
+Assim como uma lingua humana, você não precisa saber tudo de uma linguagem de programação para poder usar ela. Com o tempo você vai aprender recursos mais avançados e formas diferentes de escrever a mesma coisa, algumas melhores, outras piores, ou ainda, apenas diferentes.
 
-### Criação do labirinto
- O labirinto é criado a partir de um arquivo de texto. Isto significa que vamos fazer o nosso programa ler um arquivo de texto para saber como imprimir cada item. Abaixo, temos uma configuração de exemplo do labirinto.
+Neste tutorial faremos o possível para explicar os principais elementos da linguagem Go, porém não se sinta mal se não entender tudo neste primeiro contato. O mais importante é entender a idéia geral. E é claro, se você estiver participando de um evento presencial, não exite em pedir ajuda para as nossas *coaches*! :)
 
-```
- ############################
- #............##............#
- #.####.#####.##.#####.####.#
- #P####.#####.##.#####.####P#
- #..........................#
- #.####.##.########.##.####.#
- #......##....##....##......#
- ######.##### ## #####.######
-      #.##          ##.#
-      #.## ###--### ##.#
- ######.## # FFFF # ##.######
-       .   # FFFF #   .      
- ######.## # FFFF # ##.######
-      #.## ######## ##.#
-      #.##    G     ##.#     
- ######.## ######## ##.######
- #............##............#
- #.####.#####.##.#####.####.#
- #P..##................##..P#
- ###.##.##.########.##.##.###
- #......##....##....##......#
- #.##########.##.##########.#
- #..........................#
- ############################
-```
-Sabendo que esses caracteres estarão em um arquivo txt externo, o nosso trabalho é dizer para o nosso programa o que significam cada um dos símbolos #, ., -, F, e G. Além disso, dizemos o que deve ser impresso na tela, em vez do caractere em questão - como você pode reparar, o nosso jogo possui paredes coloridas, pastilhas e emojis.
+## Passo 01: Preparar o ambiente
 
-O trecho de código responsável por esse controle, é mostrado abaixo.
+No primeiro passo nós vamos preparar o ambiente de desenvolvimento e criar um primeiro programa executável para testar se tudo está funcionando corretamente.
 
-``` go
+Você vai precisar de:
+- Um computador com acesso a internet
 
-if char == '#' {
-  fmt.Print(labirinto.figura) /* Quando encontrar o caractere '#', imprime a figura do labirinto, ou seja, a parede. */
-} else if char == '.'{
-  fmt.Print(".") /* Quando encontrar o caractere '.', imprime '.', que corresponde a uma pastilha do jogo. */
-} else {
-  fmt.Print(" ") /* Caso o caractere encontrado não seja '#' ou '.', imprime um espaço em branco. */
-}
+Você vai terminar esta etapa com:
+- Uma instalação do Go funcionando
+- Um editor de texto simples com o qual você se sinta confortável
+- Um programa em Go que escreve "Hello Go!" na tela
+
+Nota: para programação nós não utilizamos editores que formatam texto (por exemplo, Microsoft Word), nós usamos os editores de texto simples (em inglês plain-text).
+
+Sugestões de editores de texto:
+- Mac OS X: atom
+- Linux: gedit
+- Windows: Notepad++
+
+### Instalação do Go
+
+#### Instalação MAC OS X
+
+#### Instalação Linux
+
+#### Instalação Windows
+
+### Meu primeiro programa
+
+Existe uma tradição na área da computação em que toda vez que você vai começar a aprender uma linguagem nova você comece escrevendo um programa chamado "Hello world".
+
+Nós costumamos fazer isso porque geralmente é bem simples de fazer e nos ajuda a testar se a instalação da linguagem está ok.
+
+Então vamos fazer o mesmo para a linguagem Go.
+
+Primeiro, crie uma pasta no seu computador onde você vai guardar os códigos que escrever. Você pode dar qualquer nome para ela, mas de preferência sem acentos ou espaços. Por exemplo: `tutorial`.
+
+Digite no terminal:
 
 ```
-
-
-### Esperando pelo movimento do usuário
-O controle do clique das teclas é um pouco mais complexo, mas você só precisa entender a lógica por trás disso. A ideia é diferenciar as teclas pressionadas pelo usuário: se é uma tecla para sair, para fazer o pacgo ir para cima, para baixo ou para os lados. De acordo com a tecla pressionada, determinamos qual é a ação correspondente.
-
-```go
-unc entradaDoUsuario(canal chan<- Movimento) {
-  array := make([]byte, 10)
-
-  for {
-    lido, _ := os.Stdin.Read(array)
-
-    if lido == 1 && array[0] == 0x1b { /* Se a tecla pressionada é o ESC, sai do jogo. */
-      canal <- Sai;
-    } else if lido == 3 {
-      if array[0] == 0x1b && array[1] == '[' {
-        switch array[2] {
-        case 'A': canal <- Cima /* tecla = seta para cima */
-        case 'B': canal <- Baixo /* tecla = seta para baixo */
-        case 'C': canal <- Direita /* tecla = seta para direita */
-        case 'D': canal <- Esquerda /* tecla = seta para esquerda */
-        }
-      }
-    }
-  }
-}
-
+mkdir tutorial
+cd tutorials
 ```
 
-
-### Movimentando o pacgo
-
-Para movimentar todos os personagens do jogo, utilizamos uma função chamada *move()*. Essa função é responsável por verificar em qual seta o usuário clicou e o que deve ser feito. Por exemplo, se usuário clica na setinha que aponta para cima, devemos movimentar o pacgo para a linha de cima - caso não tenha uma parede ou algum outro objeto atrapalhando. Isso significa que se o pacgo está na linha 1, deve ir para a linha 0; se está na linha 10, deve ir para a linha 9, e assim por diante.
-
-O comportamento é análogo para qualquer direção que o usuário selecionar: para movimentar o pacgo para baixo, subtraimos 1 unidade da linha atual do pacgo; para direita, somamos 1; e para esquerda, subtraímos 1. O código abaixo é extenso, mas implementa este comportamento.
-
-Um detalhe importante é que se o pacgo estiver na linha 0 (linha na extremidade de cima) e o usuário mandar ele ir para cima, o pacgo aparece na última linha do labirinto, como se fosse um portal! Por isso, temos testes para verificar em qual linha o pacgo está, antes de movimentar o pacgo.
-
-```go
-
-switch sinal {
-  case "Cima":
-              if linhaAtualDoFantasma == 0{
-                if valorDaPosicaoAtualDoFantasma == ' '{
-                   fantasma.posicao.linha = labirinto.altura - 1
-                 }
-             }else{
-               var posicaoAcimaDoFantasma = labirinto.mapa[fantasma.posicao.linha - 1][fantasma.posicao.coluna]
-               if posicaoAcimaDoFantasma != '#'{
-                 fantasma.posicao.linha = fantasma.posicao.linha - 1
-               }
-             }
-  case "Baixo":
-              if linhaAtualDoFantasma == labirinto.altura - 1{
-                 if valorDaPosicaoAtualDoFantasma == ' '{
-                   fantasma.posicao.linha = 0
-                 }
-              }else{
-                var posicaoAbaixoDoFantasma = labirinto.mapa[fantasma.posicao.linha + 1][fantasma.posicao.coluna]
-                if posicaoAbaixoDoFantasma != '#'{
-                  fantasma.posicao.linha = fantasma.posicao.linha + 1
-                }
-              }
-  case "Direita":
-                if colunaAtualDoFantasma == labirinto.largura-1{
-                  if valorDaPosicaoAtualDoFantasma == ' '{
-                    fantasma.posicao.coluna = 0
-                  }
-                }else{
-                  var posicaoDireitaDofantasma = labirinto.mapa[fantasma.posicao.linha][fantasma.posicao.coluna + 1]
-                  if posicaoDireitaDofantasma != '#'{
-                    fantasma.posicao.coluna = fantasma.posicao.coluna + 1
-                  }
-                }
-  case "Esquerda":
-                 if colunaAtualDoFantasma == 0{
-                   if valorDaPosicaoAtualDoFantasma == ' '{
-                     fantasma.posicao.coluna = labirinto.largura - 1
-                   }
-                 }else{
-                   var posicaoEsquerdaDoFantasma = labirinto.mapa[fantasma.posicao.linha][fantasma.posicao.coluna - 1]
-                   if posicaoEsquerdaDoFantasma != '#'{
-                     fantasma.posicao.coluna = fantasma.posicao.coluna - 1
-                   }
-                 }
-  }
+Abra um editor de texto simples e copie e cole o trecho a seguir:
 
 ```
+package main
 
-### Movimentando os fantasmas
+import "fmt"
 
- Os fantasmas se movimentam de forma semelhante ao pacgo. A diferença é que eles devem se mover sozinhos, independente de uma tecla que o usuário clicar. Para isso, utilizamos a mesma função *move()*.
- Iteramos sobre a lista de fantasmas, para obter a posição de cada um deles e, assim, movimentar para onde quisermos - isto , movimentá-los de acordo com um algoritmo especial que criamos!
-
-
-```go
-
-func moverFantasmas() {
-
-  for {
-    for i := 0; i < len(lista_de_fantasmas); i++{
-        var valorDaPosicaoAtualDoFantasma = labirinto.mapa[lista_de_fantasmas[i].posicao.linha][lista_de_fantasmas[i].posicao.coluna]
-        var linhaAtualDoFantasma = lista_de_fantasmas[i].posicao.linha
-        var colunaAtualDoFantasma = lista_de_fantasmas[i].posicao.coluna
-        move(lista_de_fantasmas[i], valorDaPosicaoAtualDoFantasma, linhaAtualDoFantasma, colunaAtualDoFantasma)
-    }
-    dorme(200)
-  }
-}
-
-```
-
-Após movimentar todos os fantasmas do jogo, pedimos para o programa esperar por 200ms, chamando a função *dorme()*.
-
-
-### Detectando uma colisão
-Para detectar se o pacgo encostou em um fantasma, precisamos verificar se a posição do pacgo é a mesma do fantasma. Para isso, o código abaixo é suficiente.
-
-```go
-
-func detectarColisao() bool {
-  for _, fantasma := range lista_de_fantasmas {
-    if fantasma.posicao == pacgo.posicao {
-      return true /* Se algum fantasma estiver na mesma posição que o pacgo, houve uma colisão. */
-    }
-  }
-  return false /* Senão, não houve colisão. */
-}
-
-
-```
-
-
-### Fim do jogo
-O jogo se passa num loop que espera por uma tecla do usuário. Se a tecla for tecla de movimento, movimentamos o pacgo; se for a tecla para sair, saímos do jogo. Caso o pacgo morra (colida com um fantasma), o jogo termina.
-
-```go
-for  {
-    atualizarLabirinto() /* Imprime na tela as novas posições do pacgo e dos fantasmas. */
-
-    select {
-    case tecla = <-canal:
-        moverPacGo(tecla) /* Caso o usuário clique em uma tecla de movimento, movimenta o pacgo na direção desejada. */
-    default:
-    }
-    if tecla == Sai { break } /* Caso o usuário clique na tecla para sair, sai do jogo. */
-
-    if detectarColisao() {
-      terminarJogo() /* Se houve uma colisão do pacgo com um fantasma, termina o jogo. */
-      break;
-    }
-```
-
-A função que termina o jogo está abaixo.
-```go
-func terminarJogo() {
-  moveCursor( Posicao{labirinto.altura + 2, 0} )
-  fmt.Println("Fim de jogo! Os fantasmas venceram... \xF0\x9F\x98\xAD")
+func main() {
+  fmt.Println("Olá Go!")
 }
 ```
+
+Salve o arquivo como `main.go` na pasta que você criou para os seus códigos.
+
+Vamos **compilar** o programa. Este termo pode parecer estranho, mas na verdade isso só quer dizer que vamos traduzir o texto que escrevemos na linguagem de programação para uma linguagem que o computador entende (chamada linguagem de máquina).
+
+Para fazer isso, digite no terminal:
+
+```
+go build
+```
+
+Com este comando o Go vai "construir" o programa a partir do texto que você escreveu no arquivo `main.go`. Ele vai criar um novo arquivo na mesma pasta que é o chamado "executável".
+
+Vamos rodar este programa. Se você estiver no MAC OS X ou Linux, o comando para executar é assim:
+
+```
+./tutorial
+```
+
+No Windows, o comando para executar é assim:
+
+```
+tutorial
+```
+
+Você deve ter visto a mensagem "Olá Go" sendo impressa na tela. Estamos prontas para começar!
+
+## Passo 02: Estrutura de um jogo
+
+Neste tutorial nós vamos construir um jogo chamado PacGo. O nome é uma brincadeira com o clássico PacMan.
+
+Para quem não conhece, o seu objetivo é controlar o PacGo por um labirinto que está repleto de fantasmas. Nos corredores do labirinto existem pastilhas que contam pontos quando o PacGo come elas.
+
+Em alguns pontos estratégicos, existem cogumelos de força que tornam o PacGo temporariamente invencivel aos fantasmas (e pode comer eles também, valendo pontos). O objetivo  do jogo é comer todas as pastilhas do labirinto antes de perder todas as vidas.
+
+O primeiro passo no desenvolvimento de um jogo é o chamado "Game Design", que é onde estabelecemos as regras e objetivos do jogo. Como estamos emprestando a idéia do PacGo de um jogo clássico, vamos pular esta etapa e partir direto para a codificação.
+
+Crie uma pasta chamada `pacgo` para separar o código do jogo dos outros arquivos. Lembra como fazer? Se não, volte na seção anterior.
+
+Agora vamos criar o arquivo `main.go` onde vai ficar a parte principal do nosso programa.
