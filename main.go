@@ -183,8 +183,6 @@ func atualizarLabirinto() {
     pacgo.incrementaIndice()
   }
 
-
-
   // Imprime fantasmas
   for _, fantasma := range fantasmas {
     tela.moveCursor(posicaoInicial.adiciona(&fantasma.posicao))

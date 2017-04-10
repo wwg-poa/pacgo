@@ -33,9 +33,15 @@ Sugestões de editores de texto:
 
 #### Instalação MAC OS X
 
+_TODO_
+
 #### Instalação Linux
 
+_TODO_
+
 #### Instalação Windows
+
+_TODO_
 
 ### Meu primeiro programa
 
@@ -44,6 +50,8 @@ Existe uma tradição na área da computação em que toda vez que você vai com
 Nós costumamos fazer isso porque geralmente é bem simples de fazer e nos ajuda a testar se a instalação da linguagem está ok.
 
 Então vamos fazer o mesmo para a linguagem Go.
+
+**_Coach_: explicar resumidamente o que é terminal e pasta, se necessário.**
 
 Primeiro, crie uma pasta no seu computador onde você vai guardar os códigos que escrever. Você pode dar qualquer nome para ela, mas de preferência sem acentos ou espaços. Por exemplo: `tutorial`.
 
@@ -100,8 +108,152 @@ Para quem não conhece, o seu objetivo é controlar o PacGo por um labirinto que
 
 Em alguns pontos estratégicos, existem cogumelos de força que tornam o PacGo temporariamente invencivel aos fantasmas (e pode comer eles também, valendo pontos). O objetivo  do jogo é comer todas as pastilhas do labirinto antes de perder todas as vidas.
 
-O primeiro passo no desenvolvimento de um jogo é o chamado "Game Design", que é onde estabelecemos as regras e objetivos do jogo. Como estamos emprestando a idéia do PacGo de um jogo clássico, vamos pular esta etapa e partir direto para a codificação.
+O primeiro passo no desenvolvimento de um jogo é o chamado _game design_, que é onde estabelecemos as regras e objetivos do jogo.
+
+Como estamos emprestando a idéia do PacGo de um jogo clássico, vamos pular esta etapa e partir direto para a codificação.
+
+**_Coaches_: explicar brevemente o jogo Pac Man observando os aspectos de _game design_**
 
 Crie uma pasta chamada `pacgo` para separar o código do jogo dos outros arquivos. Lembra como fazer? Se não, volte na seção anterior.
 
-Agora vamos criar o arquivo `main.go` onde vai ficar a parte principal do nosso programa.
+Agora vamos criar o arquivo `main.go` onde vai ficar a parte principal do nosso programa. Abra o editor de textos e copie e cole o seguinte código:
+
+```
+package main
+
+func main() {
+
+  // Inicializar labirinto
+
+  // Loop do jogo
+  for {
+    // Desenha tela
+
+    // Processa entrada do jogador
+
+    // Processa movimento dos fantasmas
+
+    // Processa colisões
+  }
+}
+```
+
+Salve o arquivo.
+
+**_Coach_: explicar o que são comentários, a função main e o que é um loop.**
+
+Note que o nosso programa não faz nada por enquanto (exceto entrar em _loop_ infinito). Isto é porque ainda não inserimos nenhum código no programa, este é apenas um esqueleto com comentários onde vamos colocar os principais componentes do jogo.
+
+Para fazer um jogo nós precisamos nos preocupar com os seguintes detalhes:
+
+- Carregar os dados do jogo (no caso, o mapa e a posição de cada elemento no mapa)
+- Criar um loop principal (pois nós queremos que o jogo continue sempre funcionado até decidirmos que ele deve parar)
+- Dentro do loop:
+  - Desenhar o labirinto na tela
+  - Processar o movimento do jogador (também chamado de entrada do usuário)
+  - Processar o movimento dos fantasmas
+  - Processar colisões, o que quer dizer, verificar se o jogador bateu em algum fantasma
+
+**_Coach_: explicar o papel de cada uma dessas etapas para a construção do jogo.**
+
+Todos estes passos estão anotados no código do programa por meio dos comentários.
+
+Digite no terminal o comando `go build` para criar o programa `pacgo`. Você pode executar o programa que acabou de criar com o comando `./pacgo` (em Linux ou MacOS), ou com o comando `pacgo` (em Windows).
+
+Ao executar o `pacgo` você vai reparar que o programa parece ter **travado** o terminal, porém este é o *loop* infinito do jogo. Para sair do programa, você pode pressionar as teclas *control* (`Ctrl`) e a letra `C` simultaneamente (escrevemos `Ctrl+C` para abreviar). Lembre-se deste atalho, vamos usar ele muitas vezes ao longo do tutorial.
+
+## Passo 03: Construindo um labirinto
+
+A nossa primeira tarefa de codificação vai ser desenhar um labirinto na tela.
+
+Primeiro, nós vamos criar uma representação do labirinto no programa. Para isso vamos utilizar uma `struct`. No arquivo `main.go` adicione o seguinte código entre a linha 1 e a linha 3:
+
+```
+type Labirinto struct {
+  largura       int
+  altura        int
+  mapa          []string
+}
+
+var labirinto Labirinto
+```
+
+A `struct` chamada `Labirinto` serve para guardar as principais características do nosso labirinto: o tamanho dele (representado pela `largura` e `altura`) e o seu desenho, representado pelo `mapa`.
+
+Vamos criar as funções para construir o labirinto e desenhá-lo na tela. Coloque o código abaixo após a linha `var labirinto Labirinto`:
+
+```
+func inicializarLabirinto() {
+  labirinto = Labirinto{
+    largura: 20,
+    altura : 10,
+    mapa   : []string{
+      "####################",
+      "#                 F#",
+      "#                  #",
+      "#                  #",
+      "#                  #",
+      "#                  #",
+      "#                  #",
+      "#                  #",
+      "#G                 #",
+      "####################",
+    },
+  }
+}
+
+func desenhaTela() {
+  for _, linha := range labirinto.mapa {
+    fmt.Println(linha)
+  }
+}
+```
+
+No mapa, o caractere `#` representa as nossas paredes. A letra `G`representa a posição inicial do nosso personagem (o PacGo) e o `F`representa a posição inicial de um fantasma.
+
+Agora altere a função `main` com a chamada para as duas funções criadas acima colocando-as logo abaixo dos respectivos comentários. Além disso coloque a palavra `break` abaixo do comentário `// Processa entrada do jogador`. O seu código vai ficar assim:
+
+```
+func main() {
+
+  // Inicializar labirinto
+  inicializarLabirinto()
+
+  // Loop do jogo
+  for {
+    // Desenha tela
+    desenhaTela()
+
+    // Processa entrada do jogador
+    break
+
+    // Processa movimento dos fantasmas
+
+    // Processa colisões
+  }
+}
+```
+
+Execute agora o seu código:
+
+```
+go run main.go
+```
+
+Note que ele imprimiu o labirinto e saiu do programa. Isso é porque colocamos a palavra `break` para quebrar o _loop_ infinito. Experimente tirar esta palavra e ver o que acontece. (Lembre-se que neste caso a combinação de teclas para parar o programa é `Ctrl+C`)
+
+## Passo 04: Mover o PacGo
+
+## Passo 05: Mover os fantasmas
+
+## Passo 06: Melhorar o gráfico
+
+## Passo 08: Adicionar pastilhas e pontos
+
+## Passo 09: Adicionar fim de jogo
+
+## Passo 10: Verificar colisões
+
+## Passo 11: Adicionar vidas
+
+## Passo 12: Adicionar cogumelos de força
