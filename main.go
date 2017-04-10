@@ -134,8 +134,8 @@ func construirLabirinto(nomeArquivo string) error {
       largura: len(mapa[0]),
       altura: len(mapa),
       mapa: mapa,
-      figMuro: "\x1b[44m \x1b[0m",
-      figMuroSuper: "\x1b[41m \x1b[0m",
+      figMuro: fundoAzul(" "),
+      figMuroSuper: fundoVermelho(" "),
       figSP: "\xF0\x9F\x8D\x84",
       quantiaPastilhas: quantiaPastilhas,
     }
@@ -152,7 +152,8 @@ func atualizarLabirinto() {
 
   // Imprime os pontos
   tela.moveCursor(Posicao{0,0})
-  fmt.Printf("%sPontos: %d Vidas: %d%s\n", "\x1b[31;1m", pacgo.pontos, pacgo.vidas, "\x1b[0m")
+  pontosEVidas := fmt.Sprintf("Pontos: %d Vidas: %d", pacgo.pontos, pacgo.vidas)
+  fmt.Println(vermelho(intenso(pontosEVidas)))
 
   posicaoInicial := Posicao{2,0}
   tela.moveCursor(posicaoInicial)

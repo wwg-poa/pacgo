@@ -4,6 +4,7 @@ import (
   "fmt"
   "os"
   "os/exec"
+  "regexp"
 )
 
 type Tela struct{}
@@ -25,7 +26,7 @@ func finaliza() {
   rawMode.Wait()
 }
 
-func (posicao1 *Posicao) adiciona(posicao2 *Posicao) (Posicao){
+func (posicao1 *Posicao) adiciona(posicao2 *Posicao) Posicao {
   return Posicao{posicao1.linha + posicao2.linha, posicao1.coluna + posicao2.coluna}
 }
 
@@ -52,4 +53,29 @@ func (tela *Tela) limpa() {
 
 func (tela *Tela) moveCursor(p Posicao) {
   fmt.Printf("%s[%d;%df", ESC, p.linha + 1, p.coluna + 1)
+}
+
+func vermelho(s string) string { return ansi(31, s) }
+func verde(s string) string { return ansi(32, s) }
+func azul(s string) string { return ansi(34, s) }
+func fundoVermelho(s string) string { return ansi(41, s) }
+func fundoVerde(s string) string { return ansi(42, s) }
+func fundoAzul(s string) string { return ansi(44, s) }
+func intenso(s string) string { return ansi(1, s) }
+
+var ansiRE *regexp.Regexp
+
+func ansi(code int, s string) string {
+  if ansiRE == nil {
+    ansiRE = regexp.MustCompile(`^` + ESC + `\[(\d+(?:;\d+)*m.*` + ESC + `\[0m)$`)
+  }
+
+  parts := ansiRE.FindStringSubmatch(s)
+  if parts == nil {
+    return fmt.Sprintf("%s[%dm%s%s[0m", ESC, code, s, ESC)
+  } else {
+    return fmt.Sprintf("%s[%d;%s", ESC, code, parts[1])
+  }
+
+  return ""
 }
