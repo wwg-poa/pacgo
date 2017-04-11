@@ -59,7 +59,7 @@ Digite no terminal:
 
 ```
 mkdir tutorial
-cd tutorials
+cd tutorial
 ```
 
 Abra um editor de texto simples e copie e cole o trecho a seguir:
@@ -242,7 +242,52 @@ go run main.go
 
 Note que ele imprimiu o labirinto e saiu do programa. Isso é porque colocamos a palavra `break` para quebrar o _loop_ infinito. Experimente tirar esta palavra e ver o que acontece. (Lembre-se que neste caso a combinação de teclas para parar o programa é `Ctrl+C`)
 
+O que você deve ter observado é que sem a palavra `break` dentro do _loop_ (iniciado pela palavra-chave `for`) o programa imprime infinitas vezes o mesmo mapa e a tela fica "rolando" indefinidamente.
+
+Vamos corrigir este comportamento adicionando uma função para limpar a tela antes de imprimir o mapa. Copie e cole o código abaixo antes da função `desenhaTela()`:
+
+```
+type Posicao struct {
+  linha  int,
+  coluna int
+}
+
+func moveCursor(p Posicao) {
+  fmt.Printf("\x1b[%d;%df", p.linha, p.coluna)
+}
+
+func limpaTela() {
+  fmt.Printf("\x1b[2J")
+  moveCursor( Posicao{0, 0} )
+}
+```
+O código acima define duas funções auxiliares: `moveCursor()` e `limpaTela()`.
+
+Pense no cursor como a "caneta" que escreve na tela. A função moveCursor diz para o computador onde é a próxima posição do terminal onde ele deve escrever.
+
+A função limpaTela apaga todo o conteúdo do terminal e reposiciona o cursor na posição (0, 0), que é o canto superior esquerdo da tela.
+
+**_Coaches_: explicar as coordenadas da tela.**
+
+Não se preocupe com o código dentro das aspas na chamada de função `fmt.Printf()`. Estes são códigos de controle que têm funções especiais. Vale lembrar que pouca gente decora estes códigos - existem tabelas prontas na internet com a lista dos códigos e suas funções.
+
+Agora altere a função `desenhaTela()` para incluir uma chamada para `limpaTela()` antes de imprimir o mapa:
+
+```
+func desenhaTela() {
+  limpaTela()
+  for _, linha := range labirinto.mapa {
+    fmt.Println(linha)
+  }
+}
+```
+Remova a linha `break` do _loop_ principal e execute novamente o programa. Pode parecer que voltamos ao começo da lição, mas na verdade estamos prontas para fazer animações. A tela parece parada, mas está sendo atualizada várias vezes por segundo (porém sempre com a mesma imagem).
+
+Lembre-se de sair do programa com `Ctrl+C`.
+
 ## Passo 04: Mover o PacGo
+
+Agora que nós temos a estrutura de animação pronta, podemos começar a pensar em mover o nosso PacGo (atualmente representado pelo `G` no mapa).
 
 ## Passo 05: Mover os fantasmas
 
