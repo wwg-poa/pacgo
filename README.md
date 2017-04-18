@@ -289,6 +289,134 @@ Lembre-se de sair do programa com `Ctrl+C`.
 
 Agora que nós temos a estrutura de animação pronta, podemos começar a pensar em mover o nosso PacGo (atualmente representado pelo `G` no mapa).
 
+Para facilitar o controle do PacGo ao longo de todo o programa, vamos primeiro criar uma estrutura para representá-lo. Cole o código abaixo da definição da estrutura `Posicao`:
+
+```
+type PacGo struct {
+  posicao    Posicao
+  figura     string
+}
+
+var pacgo PacGo
+
+func criarPacGo(posicao Posicao, figura string) {
+  pacgo = PacGo{
+    posicao: posicao,
+    figura: "G",
+  }
+}
+```
+
+Nós criamos a função para construir o PacGo (`criarPacGo`), mas falta chamar a esta função dentro do nosso programa. Vamos alterar a função `inicializarLabirinto` para construir o PacGo com a sua posição correta no mapa.
+
+```
+func inicializarLabirinto() {
+  labirinto = Labirinto{
+    largura: 20,
+    altura : 10,
+    mapa   : []string{
+      "####################",
+      "#                 F#",
+      "#                  #",
+      "#                  #",
+      "#                  #",
+      "#                  #",
+      "#                  #",
+      "#                  #",
+      "#G                 #",
+      "####################",
+    },
+  }
+
+  // O código novo começa aqui
+  for linha, linhaMapa := range labirinto.mapa {
+    for coluna, caractere := range linhaMapa {
+      switch( caractere ) {
+        case 'G': { criarPacGo( {linha, coluna}, "G") }
+      }
+    }
+  }
+}
+```
+
+Com o PacGo criado podemos movimentá-lo. Copie e cole o código abaixo depois da definição da função `atualizarLabirinto`:
+
+```
+type Movimento int
+
+const (
+  Cima = iota
+  Baixo
+  Esquerda
+  Direita
+  Nenhum
+  Sair
+)
+
+func moverPacGo(m Movimento) {
+  var novaLinha = pacgo.posicao.linha
+  var novaColuna = pacgo.posicao.coluna
+
+  switch m {
+    case Cima:
+      novaLinha--
+      if novaLinha < 0 {
+        novaLinha = labirinto.altura - 1
+      }
+    case Baixo:
+      novaLinha++
+      if novaLinha >= labirinto.altura {
+        novaLinha = 0
+      }
+    case Direita:
+      novaColuna++
+      if novaColuna >= labirinto.largura {
+        novaColuna = 0
+      }
+    case Esquerda:
+      novaColuna--
+      if novaColuna < 0 {
+        novaColuna = labirinto.largura - 1
+      }
+  }
+
+  conteudoDoMapa := labirinto.mapa[novaLinha][novaColuna]
+  if conteudoDoMapa != '#' {
+    pacgo.posicao.linha = novaLinha
+    pacgo.posicao.coluna = novaColuna
+  }
+}
+```
+**_Coaches_: explicar o sistema de coordenadas da tela.**
+
+A função `moverPacGo` recebe um sinal de movimento e tenta atualizar a posição atual do PacGo. Porém, se a nova posição cair numa parede (representada pelo caractere `#`) a função ignora o movimento.
+
+Faltou definir a função que gera este sinal. Para saber qual é a intenção de movimento do jogador, nós precisamos saber que tecla ele pressionou. Nós chamamos isso de "entrada do usuário". A função abaixo faz este trabalho:
+
+```
+func entradaDoUsuario(canal chan<- Movimento) {
+  array := make([]byte, 10)
+
+  for {
+    lido, _ := os.Stdin.Read(array)
+
+    if lido == 1 && array[0] == 0x1b {
+      canal <- Sair;
+    } else if lido == 3 {
+      if array[0] == 0x1b && array[1] == '[' {
+        switch array[2] {
+          case 'A': canal <- Cima
+          case 'B': canal <- Baixo
+          case 'C': canal <- Direita
+          case 'D': canal <- Esquerda
+        }
+      }
+    }
+  }
+}
+```
+
+
 ## Passo 05: Mover os fantasmas
 
 ## Passo 06: Melhorar o gráfico
