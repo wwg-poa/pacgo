@@ -1,37 +1,37 @@
 # Tutorial Women Who Go POA
 
-Seja bem vinda ao tutorial do Women Who Go Porto Alegre!
+Seja bem-vinda ao tutorial do Women Who Go Porto Alegre!
 
 O objetivo deste tutorial é mostrar que programação não é uma coisa de outro mundo e pode ser muito divertido. Nosso objetivo é construir um jogo do zero, utilizando a linguagem de programação Go.
 
 As linguagens de programação são a forma como nós nos comunicamos com os computadores e dizemos para eles o que queremos que eles façam. Além do Go existem inúmeras outras linguagens, cada uma com as suas particularidades.
 
-Assim como uma lingua humana, você não precisa saber tudo de uma linguagem de programação para poder usar ela. Com o tempo você vai aprender recursos mais avançados e formas diferentes de escrever a mesma coisa, algumas melhores, outras piores, ou ainda, apenas diferentes.
+Assim como uma língua humana, você não precisa saber tudo de uma linguagem de programação para usá-la. Com o tempo você vai aprender recursos mais avançados e formas diferentes de escrever a mesma coisa, algumas melhores, outras piores, ou ainda, apenas diferentes.
 
-Neste tutorial faremos o possível para explicar os principais elementos da linguagem Go, porém não se sinta mal se não entender tudo neste primeiro contato. O mais importante é entender a idéia geral. E é claro, se você estiver participando de um evento presencial, não exite em pedir ajuda para as nossas *coaches*! :)
+Neste tutorial faremos o possível para explicar os principais elementos da linguagem Go, porém não se sinta mal se não entender tudo neste primeiro contato. O mais importante é entender a idéia geral e é claro, se você estiver participando de um evento presencial, não hesite em pedir ajuda para as nossas *coaches*! :)
 
 ## Passo 01: Preparar o ambiente
 
 No primeiro passo nós vamos preparar o ambiente de desenvolvimento e criar um primeiro programa executável para testar se tudo está funcionando corretamente.
 
 Você vai precisar de:
-- Um computador com acesso a internet
+- Um computador com acesso à internet
 
 Você vai terminar esta etapa com:
 - Uma instalação do Go funcionando
 - Um editor de texto simples com o qual você se sinta confortável
 - Um programa em Go que escreve "Hello Go!" na tela
 
-Nota: para programação nós não utilizamos editores que formatam texto (por exemplo, Microsoft Word), nós usamos os editores de texto simples (em inglês plain-text).
+Nota: para programação nós não utilizamos editores que formatam texto (por exemplo, Microsoft Word), nós usamos os editores de texto simples (em inglês *plain-text*).
 
 Sugestões de editores de texto:
-- Mac OS X: atom
+- MacOS: atom
 - Linux: gedit
 - Windows: Notepad++
 
 ### Instalação do Go
 
-#### Instalação MAC OS X
+#### Instalação MacOS
 
 _TODO_
 
@@ -86,7 +86,7 @@ go build
 
 Com este comando o Go vai "construir" o programa a partir do texto que você escreveu no arquivo `main.go`. Ele vai criar um novo arquivo na mesma pasta que é o chamado "executável".
 
-Vamos rodar este programa. Se você estiver no MAC OS X ou Linux, o comando para executar é assim:
+Vamos rodar este programa. Se você estiver no MacOS ou Linux, o comando para executar é assim:
 
 ```
 ./tutorial
@@ -106,7 +106,7 @@ Neste tutorial nós vamos construir um jogo chamado PacGo. O nome é uma brincad
 
 Para quem não conhece, o seu objetivo é controlar o PacGo por um labirinto que está repleto de fantasmas. Nos corredores do labirinto existem pastilhas que contam pontos quando o PacGo come elas.
 
-Em alguns pontos estratégicos, existem cogumelos de força que tornam o PacGo temporariamente invencivel aos fantasmas (e pode comer eles também, valendo pontos). O objetivo  do jogo é comer todas as pastilhas do labirinto antes de perder todas as vidas.
+Em alguns pontos estratégicos, existem cogumelos de força que tornam o PacGo temporariamente invencível aos fantasmas (e pode comê-los também, valendo pontos). O objetivo do jogo é comer todas as pastilhas do labirinto antes de perder todas as vidas.
 
 O primeiro passo no desenvolvimento de um jogo é o chamado _game design_, que é onde estabelecemos as regras e objetivos do jogo.
 
@@ -116,7 +116,7 @@ Como estamos emprestando a idéia do PacGo de um jogo clássico, vamos pular est
 
 Crie uma pasta chamada `pacgo` para separar o código do jogo dos outros arquivos. Lembra como fazer? Se não, volte na seção anterior.
 
-Agora vamos criar o arquivo `main.go` onde vai ficar a parte principal do nosso programa. Abra o editor de textos e copie e cole o seguinte código:
+Agora vamos criar o arquivo `main.go` onde vai ficar a parte principal do nosso programa. Abra o editor de textos, copie e cole o seguinte código:
 
 ```
 package main
@@ -140,7 +140,7 @@ func main() {
 
 Salve o arquivo.
 
-**_Coach_: explicar o que são comentários, a função main e o que é um loop.**
+**_Coach_: explicar o que são comentários, a função `main` e o que é um _loop_.**
 
 Note que o nosso programa não faz nada por enquanto (exceto entrar em _loop_ infinito). Isto é porque ainda não inserimos nenhum código no programa, este é apenas um esqueleto com comentários onde vamos colocar os principais componentes do jogo.
 
@@ -160,7 +160,7 @@ Todos estes passos estão anotados no código do programa por meio dos comentár
 
 Digite no terminal o comando `go build` para criar o programa `pacgo`. Você pode executar o programa que acabou de criar com o comando `./pacgo` (em Linux ou MacOS), ou com o comando `pacgo` (em Windows).
 
-Ao executar o `pacgo` você vai reparar que o programa parece ter **travado** o terminal, porém este é o *loop* infinito do jogo. Para sair do programa, você pode pressionar as teclas *control* (`Ctrl`) e a letra `C` simultaneamente (escrevemos `Ctrl+C` para abreviar). Lembre-se deste atalho, vamos usar ele muitas vezes ao longo do tutorial.
+Ao executar o `pacgo` você vai reparar que o programa parece ter **travado** o terminal, porém este é o *loop* infinito do jogo. Para sair do programa, você pode pressionar as teclas *control* (`Ctrl`) e a letra `C` simultaneamente (escrevemos `Ctrl+C` para abreviar). Lembre-se deste atalho, vamos usá-lo muitas vezes ao longo do tutorial.
 
 ## Passo 03: Construindo um labirinto
 
@@ -209,7 +209,7 @@ func desenhaTela() {
 }
 ```
 
-No mapa, o caractere `#` representa as nossas paredes. A letra `G`representa a posição inicial do nosso personagem (o PacGo) e o `F`representa a posição inicial de um fantasma.
+No mapa, o caractere `#` representa as nossas paredes. A letra `G` representa a posição inicial do nosso personagem (o PacGo) e o `F` representa a posição inicial de um fantasma.
 
 Agora altere a função `main` com a chamada para as duas funções criadas acima colocando-as logo abaixo dos respectivos comentários. Além disso coloque a palavra `break` abaixo do comentário `// Processa entrada do jogador`. O seu código vai ficar assim:
 
@@ -307,7 +307,7 @@ func criarPacGo(posicao Posicao, figura string) {
 }
 ```
 
-Nós criamos a função para construir o PacGo (`criarPacGo`), mas falta chamar a esta função dentro do nosso programa. Vamos alterar a função `inicializarLabirinto` para construir o PacGo com a sua posição correta no mapa.
+Nós criamos a função para construir o PacGo (`criarPacGo`), mas falta chamar esta função dentro do nosso programa. Vamos alterar a função `inicializarLabirinto` para construir o PacGo com a sua posição correta no mapa.
 
 ```
 func inicializarLabirinto() {
@@ -391,7 +391,7 @@ func moverPacGo(m Movimento) {
 
 A função `moverPacGo` recebe um sinal de movimento e tenta atualizar a posição atual do PacGo. Porém, se a nova posição cair numa parede (representada pelo caractere `#`) a função ignora o movimento.
 
-Faltou definir a função que gera este sinal. Para saber qual é a intenção de movimento do jogador, nós precisamos saber que tecla ele pressionou. Nós chamamos isso de "entrada do usuário". A função abaixo faz este trabalho:
+Faltou definir a função que gera este sinal. Para saber qual é a intenção de movimento do jogador nós precisamos saber que tecla ele pressionou, nós chamamos isso de "entrada do usuário", a função abaixo faz este trabalho:
 
 ```
 func entradaDoUsuario(canal chan<- Movimento) {
