@@ -77,7 +77,7 @@ A localização do workspace é definido por uma varável de ambiente chamada `G
 Para criar o workspace na localização padrão vá até a pasta home e crie a pasta `go`. Dentre as três sub-pastas do workspace, apenas a pasta `src` precisa ser criada:
 
 ```
-cd %USERPROFILE%
+cd ~
 mkdir go
 cd go
 mkdir src
