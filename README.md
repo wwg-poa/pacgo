@@ -57,7 +57,7 @@ Após essa tela continue seguindo as instruções do instalador até que o Git F
 
 ##### Instalando Go
 
-O jeito mais simples de instalar o Go no Windows é utilizar o instalador MSI. Na [página de downloads](https://golang.org/dl/) do Go procure pelo arquivo do instalador para Windows e clique no link. Os arquivos serão instalados por padrão em `C:\Go`. 
+O jeito mais simples de instalar o Go no Windows é utilizar o instalador MSI. Na [página de downloads](https://golang.org/dl/) do Go procure pelo arquivo do instalador para Windows e clique no link. Os arquivos serão instalados por padrão em `C:\Go`.
 
 Após a instalação a sua variável de ambiente `PATH` já deve conter o binário do go (`C:\Go\bin`). Para que o comando possa ser utilizado é possível que você tenha que reiniciar o Git Bash que está aberto.
 
@@ -155,7 +155,7 @@ O primeiro passo no desenvolvimento de um jogo é o chamado _game design_, que �
 
 Como estamos emprestando a idéia do PacGo de um jogo clássico, vamos pular esta etapa e partir direto para a codificação.
 
-**_Coaches_: explicar brevemente o jogo Pac Man observando os aspectos de _game design_**
+**_Coach_: explicar brevemente o jogo Pac Man observando os aspectos de _game design_**
 
 Crie uma pasta chamada `pacgo` para separar o código do jogo dos outros arquivos. Lembra como fazer? Se não, volte na seção anterior.
 
@@ -165,10 +165,11 @@ Agora vamos criar o arquivo `main.go` onde vai ficar a parte principal do nosso 
 package main
 
 func main() {
+  // Inicializar terminal
 
   // Inicializar labirinto
 
-  // Loop do jogo
+  // Loop principal
   for {
     // Desenha tela
 
@@ -177,11 +178,13 @@ func main() {
     // Processa movimento dos fantasmas
 
     // Processa colisões
+
+    // Dorme
   }
 }
 ```
 
-Salve o arquivo.
+Salve o arquivo. (Lembre-se sempre de salvar o arquivo após cada alteração!)
 
 **_Coach_: explicar o que são comentários, a função `main` e o que é um _loop_.**
 
@@ -209,7 +212,45 @@ Ao executar o `pacgo` você vai reparar que o programa parece ter **travado** o 
 
 A nossa primeira tarefa de codificação vai ser desenhar um labirinto na tela.
 
-Primeiro, nós vamos criar uma representação do labirinto no programa. Para isso vamos utilizar uma `struct`. No arquivo `main.go` adicione o seguinte código entre a linha 1 e a linha 3:
+Copie e cole o código abaixo logo após a linha `package main` (primeira linha do arquivo):
+
+```
+import "fmt"
+import "os"
+import "os/exec"
+import "time"
+```
+
+**_Coach_: explique em poucas palavras o que é um _import_ e o que são bibliotecas.**
+
+O nosso primeiro passo vai ser preparar o terminal para funcionar como a nossa tela. Para isto, precisamos utilizar algumas funções de baixo nível do sistema. Não se preocupe em tentar entender elas agora. Copie e cole as funções abaixo antes da definição da função `main`:
+
+```
+func inicializa() {
+  rawMode := exec.Command("/bin/stty", "cbreak", "-echo")
+  rawMode.Stdin = os.Stdin
+  _ = rawMode.Run()
+  rawMode.Wait()
+}
+
+func finaliza() {
+  rawMode := exec.Command("/bin/stty", "-cbreak", "echo")
+  rawMode.Stdin = os.Stdin
+  _ = rawMode.Run()
+  rawMode.Wait()
+}
+```
+
+Na função `main`, abaixo do comentário `// Inicializa terminal`, inclua as seguintes linhas de código:
+
+```
+inicializa()
+defer finaliza() // executa apenas no fim do programa
+```
+
+Agora nós vamos criar uma representação do labirinto no programa. Para isso vamos utilizar uma `struct`. As _structs_ são a nossa forma de dizer que uma coisa possui várias partes, ou "propriedades". No caso, o nosso labirinto possui uma `largura`, uma `altura` e um `mapa`.
+
+No arquivo `main.go` adicione o seguinte código entre a linha 1 e a linha 3:
 
 ```
 type Labirinto struct {
@@ -221,7 +262,7 @@ type Labirinto struct {
 var labirinto Labirinto
 ```
 
-A `struct` chamada `Labirinto` serve para guardar as principais características do nosso labirinto: o tamanho dele (representado pela `largura` e `altura`) e o seu desenho, representado pelo `mapa`.
+**_Coach_: explicar a diferença entre declaração e definição.**
 
 Vamos criar as funções para construir o labirinto e desenhá-lo na tela. Coloque o código abaixo após a linha `var labirinto Labirinto`:
 
@@ -252,17 +293,22 @@ func desenhaTela() {
 }
 ```
 
+**_Coach_: explicar a diferença entre declaração de função e chamada de função.**
+
 No mapa, o caractere `#` representa as nossas paredes. A letra `G` representa a posição inicial do nosso personagem (o PacGo) e o `F` representa a posição inicial de um fantasma.
 
 Agora altere a função `main` com a chamada para as duas funções criadas acima colocando-as logo abaixo dos respectivos comentários. Além disso coloque a palavra `break` abaixo do comentário `// Processa entrada do jogador`. O seu código vai ficar assim:
 
 ```
 func main() {
+  // Inicializar terminal
+  inicializa()
+  defer finaliza() // executa apenas no fim do programa
 
   // Inicializar labirinto
   inicializarLabirinto()
 
-  // Loop do jogo
+  // Loop principal
   for {
     // Desenha tela
     desenhaTela()
@@ -273,6 +319,8 @@ func main() {
     // Processa movimento dos fantasmas
 
     // Processa colisões
+
+    // Dorme
   }
 }
 ```
@@ -287,7 +335,7 @@ Note que ele imprimiu o labirinto e saiu do programa. Isso é porque colocamos a
 
 O que você deve ter observado é que sem a palavra `break` dentro do _loop_ (iniciado pela palavra-chave `for`) o programa imprime infinitas vezes o mesmo mapa e a tela fica "rolando" indefinidamente.
 
-Vamos corrigir este comportamento adicionando uma função para limpar a tela antes de imprimir o mapa. Copie e cole o código abaixo antes da função `desenhaTela()`:
+Vamos corrigir este comportamento adicionando uma função para limpar a tela antes de imprimir o mapa. Copie e cole o código a seguir antes da sdeclaração da função `desenhaTela()`:
 
 ```
 type Posicao struct {
@@ -303,14 +351,21 @@ func limpaTela() {
   fmt.Printf("\x1b[2J")
   moveCursor( Posicao{0, 0} )
 }
+
+func dorme(milisegundos time.Duration) {
+  time.Sleep(time.Millisecond * milisegundos)
+}
 ```
-O código acima define duas funções auxiliares: `moveCursor()` e `limpaTela()`.
 
-Pense no cursor como a "caneta" que escreve na tela. A função moveCursor diz para o computador onde é a próxima posição do terminal onde ele deve escrever.
+O código acima define três funções auxiliares: `moveCursor()`, `limpaTela()` e `dorme()`.
 
-A função limpaTela apaga todo o conteúdo do terminal e reposiciona o cursor na posição (0, 0), que é o canto superior esquerdo da tela.
+Pense no cursor como a "caneta" que escreve na tela. A função `moveCursor` diz para o computador onde é a próxima posição da tela onde ele deve escrever.
 
-**_Coaches_: explicar as coordenadas da tela.**
+A função `limpaTela` apaga todo o conteúdo do terminal e reposiciona o cursor na posição (0, 0), que é o canto superior esquerdo da tela.
+
+A função `dorme` serve para fazer o computador ficar parado por algum tempo sem processar nada. Nós vamos utilizar esta função para evitar que a tela seja atualizada muito rapidamente, o que causa o efeito da tela ficar piscando.
+
+**_Coach_: explicar como funciona o sistema de coordenadas da tela.**
 
 Não se preocupe com o código dentro das aspas na chamada de função `fmt.Printf()`. Estes são códigos de controle que têm funções especiais. Vale lembrar que pouca gente decora estes códigos - existem tabelas prontas na internet com a lista dos códigos e suas funções.
 
@@ -318,13 +373,33 @@ Agora altere a função `desenhaTela()` para incluir uma chamada para `limpaTela
 
 ```
 func desenhaTela() {
-  limpaTela()
+  limpaTela() // adicione esta linha
   for _, linha := range labirinto.mapa {
     fmt.Println(linha)
   }
 }
 ```
-Remova a linha `break` do _loop_ principal e execute novamente o programa. Pode parecer que voltamos ao começo da lição, mas na verdade estamos prontas para fazer animações. A tela parece parada, mas está sendo atualizada várias vezes por segundo (porém sempre com a mesma imagem).
+
+Remova a palavra `break` do _loop_ principal e coloque a chamada `dorme(100)` logo após a linha com o comentário `// Dorme`. Este trecho do código vai ficar assim:
+
+```
+// Loop principal
+for {
+  // Desenha tela
+  desenhaTela()
+
+  // Processa entrada do jogador
+
+  // Processa movimento dos fantasmas
+
+  // Processa colisões
+
+  // Dorme
+  dorme(100)
+}
+```
+
+Execute novamente o programa. Pode parecer que voltamos ao começo da lição, mas na verdade estamos prontas para fazer animações. A tela parece parada, mas está sendo atualizada 10 vezes por segundo, porém sempre com a mesma imagem.
 
 Lembre-se de sair do programa com `Ctrl+C`.
 
@@ -375,14 +450,14 @@ func inicializarLabirinto() {
   for linha, linhaMapa := range labirinto.mapa {
     for coluna, caractere := range linhaMapa {
       switch( caractere ) {
-        case 'G': { criarPacGo( {linha, coluna}, "G") }
+        case 'G': { criarPacGo( Posicao{linha, coluna}, "G") }
       }
     }
   }
 }
 ```
 
-Com o PacGo criado podemos movimentá-lo. Copie e cole o código abaixo depois da definição da função `atualizarLabirinto`:
+Com o PacGo criado podemos movimentá-lo. Copie e cole o código abaixo depois da definição da função `desenhaTela`:
 
 ```
 type Movimento int
@@ -430,11 +505,12 @@ func moverPacGo(m Movimento) {
   }
 }
 ```
-**_Coaches_: explicar o sistema de coordenadas da tela.**
 
 A função `moverPacGo` recebe um sinal de movimento e tenta atualizar a posição atual do PacGo. Porém, se a nova posição cair numa parede (representada pelo caractere `#`) a função ignora o movimento.
 
-Faltou definir a função que gera este sinal. Para saber qual é a intenção de movimento do jogador nós precisamos saber que tecla ele pressionou, nós chamamos isso de "entrada do usuário", a função abaixo faz este trabalho:
+Agora precisamos definir a função que gera este sinal. Para saber a intenção de movimento da pessoa que está jogando nós precisamos saber que tecla ela pressionou. Este processo é chamado de "entrada do usuário".
+
+A função abaixo tem o objetivo de pegar a entrada do usuário e emitir um sinal de movimento. Copie e cole este código abaixo da definição da função `moverPacGo`:
 
 ```
 func entradaDoUsuario(canal chan<- Movimento) {
@@ -459,6 +535,44 @@ func entradaDoUsuario(canal chan<- Movimento) {
 }
 ```
 
+O próximo passo é alterar o programa principal para chamar esta função toda vez que alguém pressionar uma tecla. Copie e cole o código abaixo na função `main`, após a chamada da função `inicializarLabirinto`:
+
+```
+  canal := make(chan Movimento, 10)
+  go entradaDoUsuario(canal)
+
+  var tecla Movimento
+```
+
+Ainda na função `main`, copie e cole o código abaixo na dentro do _loop_ principal, abaixo do comentário `// Processa entrada do jogador`:
+
+```
+// Processa entrada do jogador
+select {
+  case tecla = <-canal:
+    moverPacGo(tecla)
+  default:
+}
+if tecla == Sair { break }
+```
+
+O último passo vai ser alterar a função `desenhaTela` para atualizar a posição do PacGo a cada passada:
+
+```
+func desenhaTela() {
+  limpaTela() // adicione esta linha
+  for _, linha := range labirinto.mapa {
+    fmt.Println(linha)
+  }
+
+  // Imprime PacGo
+  moveCursor(pacgo.posicao)
+  fmt.Printf("%s", pacgo.figura)
+
+  // Move cursor para fora do labirinto
+  moveCursor(Posicao{labirinto.altura + 2, 0})
+}
+``
 
 ## Passo 05: Mover os fantasmas
 
