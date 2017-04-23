@@ -33,11 +33,74 @@ Sugestões de editores de texto:
 
 #### Instalação MacOS
 
-_TODO_
+Temos duas opções de como instalar o Go no MacOS: usando Homebrew ou o instalador de pacotes do MacOS.
+
+##### Instalando Homebrew (Opcional)
+
+O jeito mais simples de instalar o Go é usando o [Homebrew](https://brew.sh/), que é um gerenciador de pacotes para o MacOS. Para instalar o Homebrew basta rodar o seguinte comando no terminal:
+
+```
+/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+```
+
+O próprio script de intalação do Homebrew explica o que esta fazendo e pausa quando necessário.
+
+##### Instalando Go
+
+Caso você tenha instalado o Homebrew, basta rodar:
+
+```
+brew install go
+```
+
+Caso você tenha optado pelo instalador de pacotes do MacOS, abra a [página de downloads](https://golang.org/dl/) do Go procure pelo arquivo do instalador para MacOS e clique no link. Os arquivos serão instalados por padrão em `/usr/local/go`.
+
+Em ambos os casos, após a instalação a sua variável de ambiente `PATH` já deve conter o binário do go. Para que o comando possa ser utilizado é possível que você tenha que reiniciar as sessões do terminal que estão abertas.
+
+Para garantir que a instalação foi bem sucedida e que o Go foi instalado corretamente, basta rodar o comando `go version` e observar uma saída parecida com a seguinte:
+
+```
+❯ go version
+go version go1.8.1 darwin/amd64
+```
 
 #### Instalação Linux
 
-_TODO_
+##### Instalando Go
+
+Se você usa uma distribuição do Linux baseada no Debian, como o Ubuntu, basta rodar o seguinte comando:
+
+```
+sudo apt-get install golang-1.8-go
+```
+
+Para outras distribuições de linux o primeiro passo para instalar o Go é baixar o arquivo .tar.gz, para isso abra a [página de downloads](https://golang.org/dl/) do Go procure pelo link correto.
+
+Em seguida será necessário extrair o conteúdo do arquivo baixado em `/usr/local`, para criar uma árvore dos arquivos do Go em `/usr/local/go`.
+
+```
+sudo tar -C /usr/local -xzf go$VERSION.$OS-$ARCH.tar.gz
+```
+
+Por exemplo, se você baixou o arquivo `go1.8.1.linux-amd64.tar.gz`:
+```
+sudo tar -C /usr/local -xzf go1.8.1.linux-amd64.tar.gz
+```
+
+Finalmente, tanto para a instalação com `apt-get` quanto com o arquivo .tar.gz é necessário adicionar o binário do Go à sua variável de ambiente `PATH`. Para fazer isso adicione ao bash profile `$HOME/.profile` a linha seguinte:
+
+```
+export PATH=$PATH:/usr/local/go/bin
+```
+
+Para que o comando possa ser utilizado é possível que você tenha que reiniciar as sessões do terminal que estão abertas.
+
+Para garantir que a instalação foi bem sucedida e que o Go foi instalado corretamente, basta rodar o comando `go version` e observar uma saída parecida com a seguinte:
+
+```
+ubuntu@svartir-sandar:~$ go version
+go version go1.8.1 linux/amd64
+```
 
 #### Instalação Windows
 
@@ -68,16 +131,26 @@ C:\Users\Camila\Documents\GitHub> go version
 go version go1.8.1 windows/amd64
 ```
 
-##### Configurando o Workspace do Go
+### Configurando o Workspace do Go
 
 A linguagem Go necessita que todo o código Go esteja localizado em um único workspace. O workspace é uma pasta que contém três sub-pastas: uma pasta `src`, que contém todos os arquivos fonte em Go. Uma pasta `pkg`, que contém os objetos dos pacotes e uma pasta `bin` que contém os comandos executáveis. Para mais detalhes leia a [documentação](https://golang.org/doc/code.html#Workspaces) da linguagem.
 
-A localização do workspace é definido por uma varável de ambiente chamada `GOPATH`. A localização padrão dessa variável é `%USERPROFILE%\go` (geralmente C:\Users\SeuNome\go) no Windows. Nesse tutorial usaremos a localização padrão do workspace. Caso você deseje utilizar outro local será necessário alterar o valor do `GOPATH` para que seu programa funcione corretamente.
+A localização do workspace é definido por uma varável de ambiente chamada `GOPATH`. A localização padrão dessa variável é `%USERPROFILE%\go` (geralmente C:\Users\SeuNome\go) no Windows ou `$HOME/go` no caso do MacOS e Linux. Nesse tutorial usaremos a localização padrão do workspace. Caso você deseje utilizar outro local será necessário alterar o valor do `GOPATH` para que seu programa funcione corretamente.
 
 Para criar o workspace na localização padrão vá até a pasta home e crie a pasta `go`. Dentre as três sub-pastas do workspace, apenas a pasta `src` precisa ser criada:
 
+#### MacOS / Linux / Windows (usando Git Bash)
 ```
 cd ~
+mkdir go
+cd go
+mkdir src
+cd src
+```
+
+#### Windows (usando linha de comando do Windows)
+```
+cd %USERPROFILE%
 mkdir go
 cd go
 mkdir src
