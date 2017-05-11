@@ -418,12 +418,13 @@ import "os"
 
 type Entrada int
 
+// Possiveis entradas do usuário
 const (
-  ParaCima = iota
+  Nada = iota  
+  ParaCima
   ParaBaixo
   ParaEsquerda
   ParaDireita
-  Nenhum
   SairDoJogo // Tecla ESC
 )
 
@@ -639,6 +640,7 @@ func desenhaTela() {
   MoveCursor(Posicao{labirinto.altura + 2, 0})
 }
 ```
+**_Coach_: comentar o impacto das mudanças na função desenhaTela.**
 
 Compile o programa e execute-o. Você deve reparar que as setas movem o `G` na tela. Estamos fazendo progresso!
 
@@ -646,13 +648,211 @@ Pressione `ESC` para sair.
 
 ## Passo 07: Movendo os fantasmas
 
-_TODO_
+Agora que o nosso PacGo é capaz de se mexer está na hora de animar os fantasmas. Vamos começar definindo uma estrutura para representar os fantasmas no código. Copie e cole a definição da `struct` Fantasma após a definição da `struct` PacGo:
+
+```
+type Fantasma struct {
+	posicao Posicao
+	figura  string
+}
+```
+
+Assim como para o PacGo a estrutura acima só define a "receita" para construir o fantasma. Precisamos também criar os fantasmas propriamente ditos. Como podem existir mais de um fantasma, ao invés de declarar um único objeto fantasma vamos declarar um _array_ de fantasmas.
+
+**_Coach_: explicar o que é um _array_.**
+
+Copie e cole o código abaixo da definição do PacGo:
+
+```
+var fantasmas []*Fantasma
+```
+
+Também precisamos de uma função para criar fantasmas. Copie e cole o código abaixo da função `criarPacGo`:
+
+```
+func criarFantasma(posicao Posicao, figura string) {
+	fantasma := &Fantasma{posicao: posicao, figura: figura}
+	fantasmas = append(fantasmas, fantasma)
+}
+```
+
+Precisamos alterar a função que inicializa o mapa (`inicializarLabirinto`) para chamar a função `criarFantasma` toda vez que encontrar um caractere `F`. Faça a modificação abaixo:
+
+```
+// Processa caracteres especiais
+for linha, linhaMapa := range labirinto.mapa {
+  for coluna, caractere := range linhaMapa {
+    switch( caractere ) {
+      case 'G': { criarPacGo(Posicao{linha, coluna}, "G") }
+      case 'F': { criarFantasma(Posicao{linha, coluna}, "F") }
+    }
+  }
+}
+```
+
+A estrutura para criar fantasmas está completa, mas ainda não temos o código que exibe eles. Para isso precisamos alterar a função `desenhaTela`:
+
+```
+// Imprime PacGo
+MoveCursor(pacgo.posicao)
+fmt.Printf("%s", pacgo.figura)
+
+// Imprime fantasmas
+for _, fantasma := range fantasmas {
+  MoveCursor(fantasma.posicao)
+  fmt.Printf("%s", fantasma.figura)
+}
+
+// Move cursor para fora do labirinto
+MoveCursor(Posicao{labirinto.altura + 2, 0})
+```
+
+O último passo é o código que move os fantasmas.  Crie a função abaixo depois da definição da função `moverPacGo`:
+
+```
+func moverFantasmas() {
+  for _, fantasma := range fantasmas {
+    // gera um número aleatório entre 0 e 4 (ParaDireita = 3)
+    var direcao = rand.Intn(ParaDireita+1)
+
+    var novaPosicao = fantasma.posicao
+
+    // Atualiza posição testando os limites do mapa
+    switch direcao {
+    case ParaCima:
+      novaPosicao.linha--
+      if novaPosicao.linha < 0 { novaPosicao.linha = labirinto.altura - 1 }
+    case ParaBaixo:
+      novaPosicao.linha++
+      if novaPosicao.linha > labirinto.altura - 1 { novaPosicao.linha = 0 }
+    case ParaEsquerda:
+      novaPosicao.coluna--
+      if novaPosicao.coluna < 0 { novaPosicao.coluna = labirinto.largura - 1 }
+    case ParaDireita:
+      novaPosicao.coluna++
+      if novaPosicao.coluna > labirinto.largura - 1 { novaPosicao.coluna = 0 }
+    }
+
+    // Verifica se a posição nova do mapa é válida
+    conteudoMapa := labirinto.mapa[novaPosicao.linha][novaPosicao.coluna]
+    if conteudoMapa != '#' { fantasma.posicao = novaPosicao }
+  }
+}
+```
+
+Como nós estamos utilizando a função `rand.Intn` do pacote `rand` precisamos adicionar o respectivo `import`:
+
+```
+import "math/rand"
+```
+
+E adicione a chamada para esta função abaixo do comentário `// Processa movimento dos fantasmas` no _loop_ principal:
+
+```
+// Processa movimento dos fantasmas
+moverFantasmas()
+```
+
+Compile o programa e utilize as setas para mover o PacGo. Você vai reparar que o `F` que representa o nosso fantasma vai se mover toda vez que você pressionar uma tecla.
+
+Experimente adicionar mais um fantasma no mapa para ver o que acontece.
 
 ## Passo 08: Corrigindo o movimento
 
-Para dar a ilusão de movimento, os jogos atualizam a tela do jogador várias vezes por segundo, onde cada uma destas telas apresenta uma imagem (também chamada de quadro ou _frame_) com uma pequena diferença em relação a anterior.
+**_Coach_: Explicar porque o movimento dos fantasmas só ocorre após pressionar uma tecla.**
 
-Para fazer isso no nosso PacGo nós vamos chamar a função `desenhaTela` 10 vezes por segundo. O truque para fazer isso é a função `dorme`.
+Você deve ter reparado na seção anterior que o nosso jogo "trava" esperando o usuário pressionar uma tecla. Num jogo de verdade é esperado que o movimento dos inimigos seja independente do movimento do jogador. Nós precisamos separar o código que lê as teclas pressionadas pelo usuário do código do _loop_ principal.
+
+**_Coach_: Explicar brevemente os conceitos de _goroutine_ e _canais_.**
+
+Para conseguir este objetivo, vamos utilizar o conceito de `goroutines` e canais (`channels`). A função de uma _goroutine_ é justamente executar um código separado do código principal.
+
+Porém, como ele vai estar separado, é preciso ter uma maneira de comunicar com o código principal (por exemplo, para informar qual tecla foi pressionada). É aí que entram os canais: são formas de comunicação entre dois códigos que estão executando em paralelo.
+
+Altere a função `leEntradaDoUsuario` para ter a seguinte forma:
+
+```
+func leEntradaDoUsuario(canal chan<- Entrada) {
+	array := make([]byte, 10)
+
+	for {
+		lido, _ := os.Stdin.Read(array)
+
+		if lido == 1 && array[0] == 0x1b {
+			canal <- SairDoJogo
+		} else if lido == 3 {
+			if array[0] == 0x1b && array[1] == '[' {
+				switch array[2] {
+				case 'A': canal <- ParaCima
+				case 'B':	canal <- ParaBaixo
+				case 'C':	canal <- ParaDireita
+				case 'D': canal <- ParaEsquerda
+				}
+			}
+		}
+	}
+}
+```
+
+Repare nas seguintes mudanças:
+
+1) a função agora recebe um parâmetro do tipo `chan<- Entrada` e não possui retorno.
+2) ao invés de gravar na variável `m`, a função grava na variável `canal` com o operador `<-` ao invés de `=`
+3) todo o código está envolto por um _loop_ infinito, o que quer dizer que uma vez chamada esta função vai executar repetidamente até o término do programa
+
+Agora vamos alterar a função `main` para chamar a função `leEntradaDoUsuario` como uma _goroutine_:
+
+```
+func main() {
+  // Inicializar terminal
+  Inicializa()
+  defer Finaliza()
+
+  // Inicializar labirinto
+  inicializarLabirinto()
+
+  // Cria rotina para ler entradas
+  canal := make(chan Movimento, 10)
+	go leEntradaDoUsuario(canal)
+
+  // Loop principal
+  for {
+    // Desenha tela
+    desenhaTela()
+
+    // Processa entrada do jogador
+    var tecla Entrada
+		select {
+		case tecla = <-canal:
+		default:
+		}
+
+    if tecla == SairDoJogo {
+      break
+    } else {
+      moverPacGo(tecla)
+    }
+
+    // Processa movimento dos fantasmas
+    moverFantasmas()
+
+    // Processa colisões
+
+    // Dorme
+  }
+}
+
+```
+
+Se você compilar e executar o programa agora, vai reparar que o movimento dos fantasmas não depende mais do movimento do PacGo. Porém, temos um efeito indesejado que é a tela ficar piscando rapidamente.
+
+Isto acontece porque o jogo não está mais "travando" na entrada do usuário antes de atualizar a tela e está atualizando ela o mais rápido possível.
+
+Tipicamente, para dar a ilusão de movimento, os jogos atualizam a tela do jogador várias vezes por segundo, onde cada uma destas telas apresenta uma imagem (também chamada de quadro ou _frame_) com uma pequena diferença em relação a anterior.
+
+Se atualizarmos a tela poucas vezes por segundo a animação vai parecer travada, mas se atualizarmos rápido demais ocorre o fenômeno de _flicker_ que é o que vocês devem ter percebido agora.
+
+O nosso jogo não possui uma animação muito complexa, então é suficiente atualizar a tela 10 vezes por segundo. O truque para fazer isso é a função `dorme`.
 
 Esta função faz com que o programa fique parado pelo número de milisegundos que passarmos como parâmetro. Passando o valor de 100 milisegundos nós conseguimos fazer com que o _loop_ principal seja executado 10 vezes por segundo.
 
@@ -670,6 +870,14 @@ E adicione a sua chamada abaixo do comentário `// Dorme` dentro do _loop_ princ
 // Dorme
 dorme(100)
 ```
+
+Você também vai precisar do _import_ que define `time`:
+
+```
+import "time"
+```
+
+Teste novamente o programa. O efeito de _flicker_ deve ter sumido.
 
 ## Passo 09: Melhorar o gráfico
 
