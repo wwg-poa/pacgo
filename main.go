@@ -58,19 +58,14 @@ type Labirinto struct {
 // Movimento é a variável que define o movimento no cenário
 type Movimento int
 
+// Possiveis entradas do usuário
 const (
-	// Cima representa o movimento para cima
-	Cima = iota
-	// Baixo representa o movimento para cima
-	Baixo
-	// Esquerda representa o movimento para esquerda
-	Esquerda
-	// Direita representa o movimento para direita
-	Direita
-	// Nenhum representa nenhum movimento
-	Nenhum
-	// Sai representa o movimento para sair do jogo
-	Sai
+  Nada = iota  
+  ParaCima
+  ParaBaixo
+  ParaEsquerda
+  ParaDireita
+  SairDoJogo // Tecla ESC
 )
 
 var labirinto *Labirinto
@@ -226,22 +221,22 @@ func moverPacGo(m Movimento) {
 	var novaColuna = pacgo.posicao.coluna
 
 	switch m {
-	case Cima:
+	case ParaCima:
 		novaLinha--
 		if novaLinha < 0 {
 			novaLinha = labirinto.altura - 1
 		}
-	case Baixo:
+	case ParaBaixo:
 		novaLinha++
 		if novaLinha >= labirinto.altura {
 			novaLinha = 0
 		}
-	case Direita:
+	case ParaDireita:
 		novaColuna++
 		if novaColuna >= labirinto.largura {
 			novaColuna = 0
 		}
-	case Esquerda:
+	case ParaEsquerda:
 		novaColuna--
 		if novaColuna < 0 {
 			novaColuna = labirinto.largura - 1
@@ -270,75 +265,33 @@ func moverPacGo(m Movimento) {
 	}
 }
 
-func random(min, max int) int {
-	return rand.Intn(max-min) + min
-}
-
-func move(fantasma *Fantasma, valorDaPosicaoAtualDoFantasma byte, linhaAtualDoFantasma int, colunaAtualDoFantasma int) {
-
-	var direcao = random(0, 4)
-	var sinal = mapaSinais[direcao]
-	//fmt.Println(sinal)
-	switch sinal {
-	case "Cima":
-		if linhaAtualDoFantasma == 0 {
-			if valorDaPosicaoAtualDoFantasma == ' ' {
-				fantasma.posicao.linha = labirinto.altura - 1
-			}
-		} else {
-			var posicaoAcimaDoFantasma = labirinto.mapa[fantasma.posicao.linha-1][fantasma.posicao.coluna]
-			if posicaoAcimaDoFantasma != '#' {
-				fantasma.posicao.linha = fantasma.posicao.linha - 1
-			}
-		}
-	case "Baixo":
-		if linhaAtualDoFantasma == labirinto.altura-1 {
-			if valorDaPosicaoAtualDoFantasma == ' ' {
-				fantasma.posicao.linha = 0
-			}
-		} else {
-			var posicaoAbaixoDoFantasma = labirinto.mapa[fantasma.posicao.linha+1][fantasma.posicao.coluna]
-			if posicaoAbaixoDoFantasma != '#' {
-				fantasma.posicao.linha = fantasma.posicao.linha + 1
-			}
-		}
-	case "Direita":
-		if colunaAtualDoFantasma == labirinto.largura-1 {
-			if valorDaPosicaoAtualDoFantasma == ' ' {
-				fantasma.posicao.coluna = 0
-			}
-		} else {
-			var posicaoDireitaDofantasma = labirinto.mapa[fantasma.posicao.linha][fantasma.posicao.coluna+1]
-			if posicaoDireitaDofantasma != '#' {
-				fantasma.posicao.coluna = fantasma.posicao.coluna + 1
-			}
-		}
-	case "Esquerda":
-		if colunaAtualDoFantasma == 0 {
-			if valorDaPosicaoAtualDoFantasma == ' ' {
-				fantasma.posicao.coluna = labirinto.largura - 1
-			}
-		} else {
-			var posicaoEsquerdaDoFantasma = labirinto.mapa[fantasma.posicao.linha][fantasma.posicao.coluna-1]
-			if posicaoEsquerdaDoFantasma != '#' {
-				fantasma.posicao.coluna = fantasma.posicao.coluna - 1
-			}
-		}
-	}
-}
-
 func moverFantasmas() {
+  for _, fantasma := range fantasmas {
+    // gera um número aleatório entre 0 e 4 (ParaDireita = 3)
+    var direcao = rand.Intn(ParaDireita+1)
 
-	for {
-		for i := 0; i < len(fantasmas); i++ {
-			var valorDaPosicaoAtualDoFantasma = labirinto.mapa[fantasmas[i].posicao.linha][fantasmas[i].posicao.coluna]
-			var linhaAtualDoFantasma = fantasmas[i].posicao.linha
-			var colunaAtualDoFantasma = fantasmas[i].posicao.coluna
-			//fmt.Println(valorDaPosicaoAtualDoFantasma, linhaAtualDoFantasma, colunaAtualDoFantasma)
-			move(fantasmas[i], valorDaPosicaoAtualDoFantasma, linhaAtualDoFantasma, colunaAtualDoFantasma)
-		}
-		dorme(200)
-	}
+    var novaPosicao = fantasma.posicao
+
+    // Atualiza posição testando os limites do mapa
+    switch direcao {
+    case ParaCima:
+      novaPosicao.linha--
+      if novaPosicao.linha < 0 { novaPosicao.linha = labirinto.altura - 1 }
+    case ParaBaixo:
+      novaPosicao.linha++
+      if novaPosicao.linha > labirinto.altura - 1 { novaPosicao.linha = 0 }
+    case ParaEsquerda:
+      novaPosicao.coluna--
+      if novaPosicao.coluna < 0 { novaPosicao.coluna = labirinto.largura - 1 }
+    case ParaDireita:
+      novaPosicao.coluna++
+      if novaPosicao.coluna > labirinto.largura - 1 { novaPosicao.coluna = 0 }
+    }
+
+    // Verifica se a posição nova do mapa é válida
+    conteudoMapa := labirinto.mapa[novaPosicao.linha][novaPosicao.coluna]
+    if conteudoMapa != '#' { fantasma.posicao = novaPosicao }
+  }
 }
 
 func dorme(milisegundos time.Duration) {
@@ -352,18 +305,18 @@ func entradaDoUsuario(canal chan<- Movimento) {
 		lido, _ := os.Stdin.Read(array)
 
 		if lido == 1 && array[0] == 0x1b {
-			canal <- Sai
+			canal <- SairDoJogo
 		} else if lido == 3 {
 			if array[0] == 0x1b && array[1] == '[' {
 				switch array[2] {
 				case 'A':
-					canal <- Cima
+					canal <- ParaCima
 				case 'B':
-					canal <- Baixo
+					canal <- ParaBaixo
 				case 'C':
-					canal <- Direita
+					canal <- ParaDireita
 				case 'D':
-					canal <- Esquerda
+					canal <- ParaEsquerda
 				}
 			}
 		}
@@ -427,7 +380,7 @@ func main() {
 			moverPacGo(tecla)
 		default:
 		}
-		if tecla == Sai {
+		if tecla == SairDoJogo {
 			break
 		}
 

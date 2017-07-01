@@ -538,12 +538,12 @@ func inicializarLabirinto() {
     mapa   : []string{
       "####################",
       "#                 F#",
-      "#                  #",
-      "#                  #",
-      "#                  #",
-      "#                  #",
-      "#                  #",
-      "#                  #",
+      "#   #####  #####   #",
+      "#       #  #       #",
+      "#       #          #",
+      "#       #  #       #",
+      "#          #       #",
+      "#   #####  #####   #",
       "#G                 #",
       "####################",
     },
@@ -856,6 +856,13 @@ O nosso jogo não possui uma animação muito complexa, então é suficiente atu
 
 Esta função faz com que o programa fique parado pelo número de milisegundos que passarmos como parâmetro. Passando o valor de 100 milisegundos nós conseguimos fazer com que o _loop_ principal seja executado 10 vezes por segundo.
 
+
+Você vai precisar do _import_ `time`:
+
+```
+import "time"
+```
+
 Adicione a declaração de `dorme` antes da função `main`:
 
 ```
@@ -871,17 +878,71 @@ E adicione a sua chamada abaixo do comentário `// Dorme` dentro do _loop_ princ
 dorme(100)
 ```
 
-Você também vai precisar do _import_ que define `time`:
-
-```
-import "time"
-```
-
 Teste novamente o programa. O efeito de _flicker_ deve ter sumido.
 
 ## Passo 09: Melhorar o gráfico
 
-_TODO_
+Nós já temos toda a funcionalidade básica do jogo pronta, mas ele ainda não se parece com um jogo de verdade. Para deixar o jogo com uma cara mais amigável, vamos utilizar emojis como os nossos gráficos!
+
+Na função `inicializarLabirinto`, vamos passar o código dos emojis no lugar das letras `G` e `F`:
+
+```
+    for coluna, caractere := range linhaMapa {
+      switch( caractere ) {
+        case 'G': { criarPacGo(Posicao{linha, coluna}, "\xF0\x9F\x98\x83") }
+        case 'F': { criarFantasma(Posicao{linha, coluna}, "\xF0\x9F\x91\xBB") }
+      }
+    }
+```
+
+Além disso, vamos substituir o símbolo `#` por paredes de verdade. Adicione o atributo `muro` na estrutura do labirinto:
+
+```
+type Labirinto struct {
+  largura       int
+  altura        int
+  mapa          []string
+  muro          string
+}
+```
+
+Agora na função `inicializarLabirinto`, inclua a inicialização da propriedade `muro` com uma chamada da função `FundoAzul` passando um espaço como parâmetro. A função `FundoAzul` está definida no arquivo `utils.go`.
+```
+  labirinto = Labirinto{
+    largura: 20,
+    altura : 10,
+    mapa   : []string{
+      "####################",
+      "#                 F#",
+      "#                  #",
+      "#                  #",
+      "#                  #",
+      "#                  #",
+      "#                  #",
+      "#                  #",
+      "#G                F#",
+      "####################",
+    },
+    muro   : FundoAzul(" "),
+  }
+```
+
+E na função `desenhaTela`, altere o código abaixo para imprimir o muro:
+
+```
+  // Imprime mapa
+  for _, linha := range labirinto.mapa {
+    for _, char := range linha {
+      switch char {
+        case '#': fmt.Print(labirinto.muro)
+        default:  fmt.Print(" ")
+      }
+    }
+    fmt.Println("")
+  }
+```
+
+Compile e execute o programa.
 
 ## Passo 10: Adicionar pastilhas e pontos
 
