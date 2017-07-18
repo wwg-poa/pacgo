@@ -538,12 +538,12 @@ func inicializarLabirinto() {
     mapa   : []string{
       "####################",
       "#                 F#",
-      "#   #####  #####   #",
-      "#       #  #       #",
-      "#       #          #",
-      "#       #  #       #",
-      "#          #       #",
-      "#   #####  #####   #",
+      "#                  #",
+      "#                  #",
+      "#                  #",
+      "#                  #",
+      "#                  #",
+      "#                  #",
       "#G                 #",
       "####################",
     },
@@ -946,24 +946,229 @@ Compile e execute o programa.
 
 ## Passo 10: Adicionar pastilhas e pontos
 
+O nosso jogo está ganhando forma, mas para parecer um jogo mesmo, precisamos adicionar algumas funcionalidades. Primeiro, nós precisamos de um placar e uma forma do PacGo ganhar pontos.
+
+Vamos primeiro criar um campo para guardar os pontos na struct PacGo:
+
+```
+type PacGo struct {
+  posicao    Posicao
+  figura     string
+  pontos     int
+}
+```
+
+Depois vamos alterar a função `desenhaTela` para incluir a impressão do placar e as pastilhas no mapa:
+
+```
+func desenhaTela() {
+  LimpaTela()
+
+  // Imprime placar
+	MoveCursor(Posicao{0, 0})
+	placar := fmt.Sprintf("Pontos: %d", pacgo.pontos)
+	fmt.Println(Vermelho(Intenso(placar)))
+
+  // Ajuste para desenhar o mapa embaixo do placar
+  deslocamento := Posicao{2, 0}
+  MoveCursor(deslocamento)
+
+  // Imprime mapa
+  for _, linha := range labirinto.mapa {
+    for _, char := range linha {
+      switch char {
+        case '#': fmt.Print(labirinto.muro)
+        case '.': fmt.Print(".")
+        default:  fmt.Print(" ")
+      }
+    }
+    fmt.Println("")
+  }
+
+  // Imprime PacGo
+  MoveCursor(pacgo.posicao.Soma(deslocamento))
+  fmt.Printf("%s", pacgo.figura)
+
+  // Imprime fantasmas
+	for _, fantasma := range fantasmas {
+		MoveCursor(fantasma.posicao.Soma(deslocamento))
+		fmt.Printf("%s", fantasma.figura)
+	}
+
+  // Move cursor para fora do labirinto
+  MoveCursor(deslocamento.Soma(Posicao{labirinto.altura + 2, 0}))
+}
+```
+
+Finalmente, altere o código da função `moverPacGo` onde está a lógica responsável por detectar paredes para incluir a contagem de pontos:
+
+```
+  conteudoDoMapa := labirinto.mapa[novaLinha][novaColuna]
+  if conteudoDoMapa != '#' {
+    pacgo.posicao.linha = novaLinha
+    pacgo.posicao.coluna = novaColuna
+
+		if conteudoDoMapa == '.' {
+		  pacgo.pontos += 10
+
+      // Remove item do mapa
+			linha := labirinto.mapa[novaLinha]
+			linha = linha[:novaColuna] + " " + linha[novaColuna+1:]
+			labirinto.mapa[novaLinha] = linha
+		}
+  }
+  ```
+
+## Passo 11: Adicionar vidas
+
+Nós temos um placar funcionando e o nosso PacGo pode ganhar pontos, mas os fantasmas ainda não são uma ameaça. Está na hora de tornar o jogo um pouco mais difícil: vamos incluir a contagem de vidas e a possibilidade dos fantasmas matarem o PacGo.
+
+Toda vez que o PacGo morre ele deve voltar para o seu ponto de origem no mapa. Por isso, precisamos guardar a posição onde ele inicia. Vamos adicionar o número de vidas e a posicição inicial na estrutura `PacGo`:
+
+```
+type PacGo struct {
+  posicao    Posicao
+  posInicial Posicao
+  figura     string
+  pontos     int
+  vidas      int
+}
+```
+
+Na criação do `PacGo` salvamos a posicição inicial e configuramos o número inicial de vidas:
+
+```
+func criarPacGo(pos Posicao, fig string) {
+  pacgo = PacGo{
+    posicao: pos,
+    posInicial: pos,
+    figura: fig,
+    vidas: 2,
+  }
+}
+```
+
+E modificamos o placar para mostrar as vidas:
+
+```
+  // Imprime placar
+	MoveCursor(Posicao{0, 0})
+	placar := fmt.Sprintf("Pontos: %d Vidas: %d", pacgo.pontos, pacgo.vidas)
+	fmt.Println(Vermelho(Intenso(placar)))
+```
+
+Agora só falta adicionar a lógica da colisão com os fantasmas. Primeiro vamos criar uma função para buscar um fantasma na posição atual do PacGo:
+
+```
+func detectarColisao() *Fantasma {
+	for _, fantasma := range fantasmas {
+		if fantasma.posicao == pacgo.posicao {
+			return fantasma
+		}
+	}
+	return nil
+}
+```
+
+E no loop principal adicione o seguinte código para processar a colisão:
+
+```
+		// Processa colisões
+		if fantasma := detectarColisao(); fantasma != nil {
+			pacgo.vidas--
+			if pacgo.vidas < 0 {
+				MoveCursor(Posicao{labirinto.altura + 3, 0})
+				fmt.Print("Fim de jogo! Os fantasmas venceram... \xF0\x9F\x98\xAD\n\n")
+				break
+			}
+			// Reseta posição do PacGopher para a posição inicial
+			pacgo.posicao = pacgo.posInicial
+		}
+```
+
+Compile o código e execute para ver o resultado!
+
+## Passo 12: Vencendo o jogo
+
+Na etapa passada nós adicionamos o suporte a vidas, o que permite que o jogador perca o jogo caso acabem todas as suas vidas. Agora precisamos dar condições para que o jogador vença a partida.
+
+O jogo acaba quando o PacGo come todas as pastilhas do labirinto. Para fazer isso, nós precisamos contar quantas pastilhas temos no total e quando este número chegar a zero a partida acabou e o PacGo venceu.
+
+A maneira mais fácil de fazer isso é manter um contador de pastilhas na estrutura labirinto, inicializar com o total de pastilhas no momento da criação do labirinto e decrementar este número toda vez que o PacGo comer uma pastilha.
+
+### Criando o contador
+
+Na estrutura `Labirinto`:
+
+```
+type Labirinto struct {
+	largura      int
+	altura       int
+	mapa         []string
+	muro         string
+	numPastilhas int
+}
+```
+
+Na função `inicializarLabirinto`:
+
+```
+	// Processa caracteres especiais
+	for linha, linhaMapa := range labirinto.mapa {
+		for coluna, caractere := range linhaMapa {
+			switch caractere {
+			case 'G':
+				criarPacGo(Posicao{linha, coluna}, "\xF0\x9F\x98\x83")
+			case 'F':
+				criarFantasma(Posicao{linha, coluna}, "\xF0\x9F\x91\xBB")
+			case '.':
+				labirinto.numPastilhas++
+			}
+		}
+	}
+```
+
+### Decrementando o contator
+
+Na função `moverPacGo`:
+
+```
+	conteudoDoMapa := labirinto.mapa[novaLinha][novaColuna]
+	if conteudoDoMapa != '#' {
+		pacgo.posicao.linha = novaLinha
+		pacgo.posicao.coluna = novaColuna
+
+		if conteudoDoMapa == '.' {
+			pacgo.pontos += 10
+      labirinto.numPastilhas--
+
+			// Remove item do mapa
+			linha := labirinto.mapa[novaLinha]
+			linha = linha[:novaColuna] + " " + linha[novaColuna+1:]
+			labirinto.mapa[novaLinha] = linha
+		}
+	}
+```
+
+### Adicionando fim de jogo (vitória)
+
+No _loop_ principal, adicione o seguinte teste:
+
+```
+		// Fim de jogo
+		if labirinto.numPastilhas == 0 {
+			MoveCursor(Posicao{labirinto.altura + 3, 0})
+			fmt.Print("Fim de jogo! Você venceu! \xF0\x9F\x98\x84")
+			break
+		}
+```
+
+Compile e teste! :)
+
+## Passo 13: Power Ups
+
 _TODO_
 
-## Passo 11: Adicionar fim de jogo
-
-_TODO_
-
-## Passo 12: Verificar colisões
-
-_TODO_
-
-## Passo 13: Adicionar vidas
-
-_TODO_
-
-## Passo 14: Adicionar cogumelos de força
-
-_TODO_
-
-## Passo 15: Adicionar suporte a novos mapas
+## Passo 14: Suporte a novos mapas
 
 _TODO_
