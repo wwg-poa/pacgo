@@ -895,46 +895,14 @@ Na função `inicializarLabirinto`, vamos passar o código dos emojis no lugar d
     }
 ```
 
-Além disso, vamos substituir o símbolo `#` por paredes de verdade. Adicione o atributo `muro` na estrutura do labirinto:
-
-```
-type Labirinto struct {
-  largura       int
-  altura        int
-  mapa          []string
-  muro          string
-}
-```
-
-Agora na função `inicializarLabirinto`, inclua a inicialização da propriedade `muro` com uma chamada da função `FundoAzul` passando um espaço como parâmetro. A função `FundoAzul` está definida no arquivo `utils.go`.
-```
-  labirinto = Labirinto{
-    largura: 20,
-    altura : 10,
-    mapa   : []string{
-      "####################",
-      "#                 F#",
-      "#                  #",
-      "#                  #",
-      "#                  #",
-      "#                  #",
-      "#                  #",
-      "#                  #",
-      "#G                F#",
-      "####################",
-    },
-    muro   : FundoAzul(" "),
-  }
-```
-
-E na função `desenhaTela`, altere o código abaixo para imprimir o muro:
+Além disso, vamos substituir o símbolo `#` por paredes de verdade. Na função `desenhaTela`, altere o código abaixo para imprimir o muro:
 
 ```
   // Imprime mapa
   for _, linha := range labirinto.mapa {
     for _, char := range linha {
       switch char {
-        case '#': fmt.Print(labirinto.muro)
+        case '#': fmt.Print(FundoAzul(" "))
         default:  fmt.Print(" ")
       }
     }
@@ -977,7 +945,7 @@ func desenhaTela() {
   for _, linha := range labirinto.mapa {
     for _, char := range linha {
       switch char {
-        case '#': fmt.Print(labirinto.muro)
+        case '#': fmt.Print(FundoAzul(" "))
         case '.': fmt.Print(".")
         default:  fmt.Print(" ")
       }
@@ -1155,10 +1123,10 @@ Na função `moverPacGo`:
 No _loop_ principal, adicione o seguinte teste:
 
 ```
-		// Fim de jogo
+    // Fim de jogo
 		if labirinto.numPastilhas == 0 {
 			MoveCursor(Posicao{labirinto.altura + 3, 0})
-			fmt.Print("Fim de jogo! Você venceu! \xF0\x9F\x98\x84")
+			fmt.Print("Fim de jogo! Você venceu! \xF0\x9F\x98\x84\n\n")
 			break
 		}
 ```
@@ -1167,8 +1135,235 @@ Compile e teste! :)
 
 ## Passo 13: Power Ups
 
-_TODO_
+O nosso jogo está quase completo, mas ainda falta um recurso importante! No jogo original, o PacGo pode comer pilulas especiais que dão o poder de comer os fantasmas. O efeito desta pílula é temporárioe dura apenas alguns segundos, mas comer os fantasmas neste estado dá muitos pontos!
+
+Na falta de um emoji pílula nós usamos o cogumelo. (Fique a vontade para escolher qualquer [emoji](https://apps.timwhitlock.info/emoji/tables/unicode))
+
+### Adicionar variável para controlar o estado da pilula
+
+```
+type PacGo struct {
+	posicao    Posicao
+	posInicial Posicao
+	figura     string
+	pontos     int
+	vidas      int
+	pilula     bool
+}
+```
+
+### Adicionar a detecção da pilula
+
+A pilula é representada pelo caractere `P` no mapa. Altere a função `moverPacGo`:
+
+```
+	if conteudoDoMapa != '#' {
+		pacgo.posicao.linha = novaLinha
+		pacgo.posicao.coluna = novaColuna
+
+		if conteudoDoMapa == '.' || conteudoDoMapa == 'P' {
+			switch conteudoDoMapa {
+			case '.':
+				pacgo.pontos += 10
+				labirinto.numPastilhas--
+			case 'P':
+				pacgo.pontos += 100
+        ativarPilula()
+			}
+
+			// Remove item do mapa
+			linha := labirinto.mapa[novaLinha]
+			linha = linha[:novaColuna] + " " + linha[novaColuna+1:]
+			labirinto.mapa[novaLinha] = linha
+		}
+	}
+```
+
+### Ativar modo invencível
+
+Crie as funções abaixo para ativar e desativar o modo invencível:
+
+```
+func ativarPilula() {
+	pacgo.pilula = true
+	go desativarPilula(10000) // 10 segundos
+}
+
+func desativarPilula(milisegundos time.Duration) {
+	dorme(milisegundos)
+	pacgo.pilula = false
+}
+```
+
+### Modificar a detecção de colisão
+
+```
+		// Processa colisões
+		if fantasma := detectarColisao(); fantasma != nil {
+			if pacgo.pilula {
+				go ressucitarFantasma(fantasma)
+				matarFantasma(fantasma)
+				pacgo.pontos += 500
+			} else {
+				pacgo.vidas--
+        // Reseta posição do PacGo para a posição inicial
+        pacgo.posicao = pacgo.posInicial
+			}
+
+			if pacgo.vidas < 0 {
+				MoveCursor(Posicao{labirinto.altura + 3, 0})
+				fmt.Print("Fim de jogo! Os fantasmas venceram... \xF0\x9F\x98\xAD\n\n")
+				break
+			}
+
+		}
+```
+
+### Adicionar lógica para matar os fantasmas
+
+```
+func ressucitarFantasma(fantasma *Fantasma, milisegundos time.Duration) {
+	dorme(milisegundos)
+	criarFantasma(fantasma.posicao, fantasma.figura)
+}
+
+func matarFantasma(fantasma *Fantasma) {
+	var indice int
+	for idx, f := range fantasmas {
+		if f.posicao == fantasma.posicao {
+			indice = idx
+			break
+		}
+	}
+	fantasmas = append(fantasmas[:indice], fantasmas[indice+1:]...)
+}
+```
+
+### Mudar a cor do mapa durante o efeito da pilula
+
+Para que o jogador saiba que ainda está sobre o efeito da pílula, vamos mudar a cor do mapa durante o efeito dela. Altere a função `desenhaTela` para testar se a pílula está ativa:
+
+```
+	// Imprime mapa
+	for _, linha := range labirinto.mapa {
+		for _, char := range linha {
+			switch char {
+			case '#':
+				if pacgo.pilula {
+					fmt.Print(FundoVermelho(" "))
+				} else {
+					fmt.Print(FundoAzul(" "))
+				}
+			case '.':
+				fmt.Print(".")
+			case 'P':
+				fmt.Print("\xF0\x9F\x8D\x84")
+			default:
+				fmt.Print(" ")
+			}
+		}
+		fmt.Println("")
+	}
+```
 
 ## Passo 14: Suporte a novos mapas
 
-_TODO_
+Nosso jogo está quase completo! Vamos agora para a última etapa, que é suportar mapas externos. Para isso vamos precisar ler arquivos do disco e carregá-los em memória.
+
+### Lendo o parâmetro do programa
+
+```
+	// Lê parâmetros do sistema operacional
+	args := os.Args[1:]
+	var arquivo string
+	if len(args) >= 1 {
+		arquivo = args[0]
+	} else {
+		arquivo = ""
+	}
+
+	// Inicializar labirinto
+	inicializarLabirinto(arquivo)
+```
+
+### Carregando o arquivo
+
+Modifique a função `inicializarLabirinto` para carregar o mapa do arquivo ao invés da memória:
+
+```
+func inicializarLabirinto(arquivo string) error {
+	var ErrMapNotFound = errors.New("Não conseguiu ler o arquivo do mapa")
+
+	// aplica o valor default caso não seja passado um arquivo
+	var tmpArquivo string
+	tmpArquivo = arquivo
+	if tmpArquivo == "" {
+		tmpArquivo = "./mapas/mapa01.txt"
+	}
+
+	// abre arquivo
+	file, err := os.Open(tmpArquivo)
+	if err != nil {
+		log.Fatal(err)
+		return ErrMapNotFound
+	}
+	// fecha depois de ler o arquivo
+	defer file.Close()
+
+	// inicializa o mapa vazio
+	mapa := []string{}
+
+	// cria um leitor para ler linha a linha o arquivo
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		linha := scanner.Text()
+		mapa = append(mapa, linha)
+	}
+
+	// determina o tamanho do mapa baseado no arquivo lido
+	largura := len(mapa[0]) - 2 // -2 para não contar o \x0D\x0A do final
+	altura := len(mapa)
+
+	labirinto = Labirinto{
+		largura: largura,
+		altura:  altura,
+		mapa:    mapa,
+	}
+
+	// Processa caracteres especiais
+	for linha, linhaMapa := range labirinto.mapa {
+		for coluna, caractere := range linhaMapa {
+			switch caractere {
+			case 'G':
+				criarPacGo(Posicao{linha, coluna}, "\xF0\x9F\x98\x83")
+			case 'F':
+				criarFantasma(Posicao{linha, coluna}, "\xF0\x9F\x91\xBB")
+			case '.':
+				labirinto.numPastilhas++
+			}
+		}
+	}
+
+	return nil
+}
+```
+
+Dentro do repositório do projeto existe uma pasta `mapas` que contém alguns mapas para testar. Experimente criar o seu próprio mapa!
+
+## Próximos passos
+
+Parabéns! Ao chegar nesta etapa você já tem um jogo completo funcionando. Mas você não precisa parar por aqui. Pense em que melhorias gostaria de ter no jogo e pesquise como implementá-las. A melhor forma de aprender é na prática, e ter um projeto _open source_ é um ótimo ponto de partida.
+
+Algumas sugestões de melhorias:
+- Adicionar um segundo jogador
+- Adicionar outros tipos de item no mapa
+- Adicionar efeitos especiais (cores)
+- Deixar os fantasmas mais inteligentes
+
+As possibilidades são infinitas!
+
+E é claro, divulgue o seu jogo na nossa página no Facebook [Women Who Go Brasil](https://www.facebook.com/WomenWhoGoBrasil/) e no Twitter mencionando @womenwhogo e @womenwhogo_poa.
+
+## Referências
+
+[Tabela de emojis](https://apps.timwhitlock.info/emoji/tables/unicode)

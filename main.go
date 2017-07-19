@@ -7,180 +7,167 @@ import (
 	"log"
 	"math/rand"
 	"os"
-	"regexp"
 	"time"
 )
 
-// Posicao é a struct que define uma posição no mapa
-type Posicao struct {
-	linha  int
-	coluna int
-}
-
-// PacGo é a struct que define o jogo PacGo
-type PacGo struct {
-	posicao        Posicao
-	posicaoInicial Posicao
-	figura         string // emoji
-	pilula         bool
-	vidas          int
-	pontos         int
-	invencivel     bool
-	figuras        []string
-	indiceFig      int
-	figuraBravo    string
-	contadorFig    Contador
-}
-
-// Contador é a struct que define um contador
-type Contador struct {
-	max      int
-	contador int
-}
-
-// Fantasma é a struct que define um fantasma
-type Fantasma struct {
-	posicao Posicao
-	figura  string // emoji
-}
-
-// Labirinto é a struct que define o labirinto
-type Labirinto struct {
-	largura          int
-	altura           int
-	mapa             []string
-	figMuro          string
-	figMuroSuper     string
-	figSP            string
-	quantiaPastilhas int
-}
-
-// Movimento é a variável que define o movimento no cenário
-type Movimento int
+type Entrada int
 
 // Possiveis entradas do usuário
 const (
-  Nada = iota  
-  ParaCima
-  ParaBaixo
-  ParaEsquerda
-  ParaDireita
-  SairDoJogo // Tecla ESC
+	Nada = iota
+	ParaCima
+	ParaBaixo
+	ParaEsquerda
+	ParaDireita
+	SairDoJogo // Tecla ESC
 )
 
-var labirinto *Labirinto
-var pacgo *PacGo
+type PacGo struct {
+	posicao    Posicao
+	posInicial Posicao
+	figura     string
+	pontos     int
+	vidas      int
+	pilula     bool
+}
+
+type Fantasma struct {
+	posicao Posicao
+	figura  string
+}
+
+type Labirinto struct {
+	largura      int
+	altura       int
+	mapa         []string
+	numPastilhas int
+}
+
+var pacgo PacGo
 var fantasmas []*Fantasma
-var mapaSinais map[int]string
+var labirinto Labirinto
+
+func criarPacGo(pos Posicao, fig string) {
+	pacgo = PacGo{
+		posicao:    pos,
+		posInicial: pos,
+		figura:     fig,
+		vidas:      2,
+	}
+}
 
 func criarFantasma(posicao Posicao, figura string) {
 	fantasma := &Fantasma{posicao: posicao, figura: figura}
 	fantasmas = append(fantasmas, fantasma)
 }
 
-func criarPacGo(posicao Posicao, figura string, pilula bool, vidas int) {
-	pacgo = &PacGo{
-		posicao:        posicao,
-		posicaoInicial: posicao,
-		figura:         "\xF0\x9F\x98\x83",
-		pilula:         false,
-		vidas:          3,
-		figuras:        []string{"\xF0\x9F\x98\x83", "\xF0\x9F\x98\x8C"},
-		indiceFig:      0,
-		contadorFig:    Contador{3, 0},
-		figuraBravo:    "\xF0\x9F\x98\xA1",
+func leEntradaDoUsuario(canal chan<- Entrada) {
+	array := make([]byte, 10)
+
+	for {
+		lido, _ := os.Stdin.Read(array)
+
+		if lido == 1 && array[0] == 0x1b {
+			canal <- SairDoJogo
+		} else if lido == 3 {
+			if array[0] == 0x1b && array[1] == '[' {
+				switch array[2] {
+				case 'A':
+					canal <- ParaCima
+				case 'B':
+					canal <- ParaBaixo
+				case 'C':
+					canal <- ParaDireita
+				case 'D':
+					canal <- ParaEsquerda
+				}
+			}
+		}
 	}
 }
 
-func construirLabirinto(nomeArquivo string) error {
-
+func inicializarLabirinto(arquivo string) error {
 	var ErrMapNotFound = errors.New("Não conseguiu ler o arquivo do mapa")
 
-	var arquivo string
-	if nomeArquivo == "" {
-		arquivo = "./data/mapa.txt"
-	} else {
-		arquivo = nomeArquivo
+	// aplica o valor default caso não seja passado um arquivo
+	var tmpArquivo string
+	tmpArquivo = arquivo
+	if tmpArquivo == "" {
+		tmpArquivo = "./mapas/mapa01.txt"
 	}
 
-	file, err := os.Open(arquivo)
+	// abre arquivo
+	file, err := os.Open(tmpArquivo)
 	if err != nil {
 		log.Fatal(err)
 		return ErrMapNotFound
 	}
-
 	// fecha depois de ler o arquivo
 	defer file.Close()
 
 	// inicializa o mapa vazio
 	mapa := []string{}
 
-	r, _ := regexp.Compile("[^ #.P]")
-
 	// cria um leitor para ler linha a linha o arquivo
 	scanner := bufio.NewScanner(file)
-	quantiaPastilhas := 0
 	for scanner.Scan() {
 		linha := scanner.Text()
-
-		for indice, caracter := range linha {
-			switch caracter {
-			case 'F':
-				criarFantasma(Posicao{len(mapa), indice}, "\xF0\x9F\x91\xBB")
-			case 'G':
-				criarPacGo(Posicao{len(mapa), indice}, "\xF0\x9F\x98\x83", false, 3)
-			case '.':
-				quantiaPastilhas++
-			}
-		}
-
-		linha = r.ReplaceAllString(linha, " ")
 		mapa = append(mapa, linha)
 	}
 
-	// verifica se teve erro o leitor
-	if err = scanner.Err(); err != nil {
-		log.Fatal(err)
-		return ErrMapNotFound
+	// determina o tamanho do mapa baseado no arquivo lido
+	largura := len(mapa[0]) - 2 // -2 para não contar o \x0D\x0A do final
+	altura := len(mapa)
+
+	labirinto = Labirinto{
+		largura: largura,
+		altura:  altura,
+		mapa:    mapa,
 	}
 
-	labirinto = &Labirinto{
-		largura:          len(mapa[0]),
-		altura:           len(mapa),
-		mapa:             mapa,
-		figMuro:          fundoAzul(" "),
-		figMuroSuper:     fundoVermelho(" "),
-		figSP:            "\xF0\x9F\x8D\x84",
-		quantiaPastilhas: quantiaPastilhas,
+	// Processa caracteres especiais
+	for linha, linhaMapa := range labirinto.mapa {
+		for coluna, caractere := range linhaMapa {
+			switch caractere {
+			case 'G':
+				criarPacGo(Posicao{linha, coluna}, "\xF0\x9F\x98\x83")
+			case 'F':
+				criarFantasma(Posicao{linha, coluna}, "\xF0\x9F\x91\xBB")
+			case '.':
+				labirinto.numPastilhas++
+			}
+		}
 	}
+
 	return nil
 }
 
-func atualizarLabirinto() {
-	tela.limpa()
+func desenhaTela() {
+	LimpaTela()
 
-	// Imprime os pontos
-	tela.moveCursor(Posicao{0, 0})
-	pontosEVidas := fmt.Sprintf("Pontos: %d Vidas: %d", pacgo.pontos, pacgo.vidas)
-	fmt.Println(vermelho(intenso(pontosEVidas)))
+	// Imprime placar
+	MoveCursor(Posicao{0, 0})
+	placar := fmt.Sprintf("Pontos: %d Vidas: %d", pacgo.pontos, pacgo.vidas)
+	fmt.Println(Vermelho(Intenso(placar)))
 
-	posicaoInicial := Posicao{2, 0}
-	tela.moveCursor(posicaoInicial)
+	// Ajuste para desenhar o mapa embaixo do placar
+	deslocamento := Posicao{2, 0}
+	MoveCursor(deslocamento)
 
-	var muro = labirinto.figMuro
-	if pacgo.pilula == true {
-		muro = labirinto.figMuroSuper
-	}
-
+	// Imprime mapa
 	for _, linha := range labirinto.mapa {
 		for _, char := range linha {
 			switch char {
 			case '#':
-				fmt.Print(muro)
+				if pacgo.pilula {
+					fmt.Print(FundoVermelho(" "))
+				} else {
+					fmt.Print(FundoAzul(" "))
+				}
 			case '.':
 				fmt.Print(".")
 			case 'P':
-				fmt.Print(labirinto.figSP)
+				fmt.Print("\xF0\x9F\x8D\x84")
 			default:
 				fmt.Print(" ")
 			}
@@ -189,34 +176,20 @@ func atualizarLabirinto() {
 	}
 
 	// Imprime PacGo
-	tela.moveCursor(posicaoInicial.adiciona(&pacgo.posicao))
-	if pacgo.pilula {
-		fmt.Printf("%s", pacgo.figuraBravo)
-	} else {
-		fmt.Printf("%s", pacgo.figuras[pacgo.indiceFig])
-		pacgo.incrementaIndice()
-	}
+	MoveCursor(pacgo.posicao.Soma(deslocamento))
+	fmt.Printf("%s", pacgo.figura)
 
 	// Imprime fantasmas
 	for _, fantasma := range fantasmas {
-		tela.moveCursor(posicaoInicial.adiciona(&fantasma.posicao))
+		MoveCursor(fantasma.posicao.Soma(deslocamento))
 		fmt.Printf("%s", fantasma.figura)
 	}
 
-	// Move o cursor para fora do labirinto
-	tela.moveCursor(posicaoInicial.adiciona(&Posicao{labirinto.altura + 2, 0}))
+	// Move cursor para fora do labirinto
+	MoveCursor(deslocamento.Soma(Posicao{labirinto.altura + 2, 0}))
 }
 
-func detectarColisao() bool {
-	for _, fantasma := range fantasmas {
-		if fantasma.posicao == pacgo.posicao {
-			return true
-		}
-	}
-	return false
-}
-
-func moverPacGo(m Movimento) {
+func moverPacGo(m Entrada) {
 	var novaLinha = pacgo.posicao.linha
 	var novaColuna = pacgo.posicao.coluna
 
@@ -248,16 +221,17 @@ func moverPacGo(m Movimento) {
 		pacgo.posicao.linha = novaLinha
 		pacgo.posicao.coluna = novaColuna
 
-		if (conteudoDoMapa == '.') || (conteudoDoMapa == 'P') {
-			if conteudoDoMapa == '.' {
+		if conteudoDoMapa == '.' || conteudoDoMapa == 'P' {
+			switch conteudoDoMapa {
+			case '.':
 				pacgo.pontos += 10
-				fmt.Print("\x07")
-				labirinto.quantiaPastilhas--
-			} else {
+				labirinto.numPastilhas--
+			case 'P':
 				pacgo.pontos += 100
 				ativarPilula()
 			}
 
+			// Remove item do mapa
 			linha := labirinto.mapa[novaLinha]
 			linha = linha[:novaColuna] + " " + linha[novaColuna+1:]
 			labirinto.mapa[novaLinha] = linha
@@ -266,89 +240,63 @@ func moverPacGo(m Movimento) {
 }
 
 func moverFantasmas() {
-  for _, fantasma := range fantasmas {
-    // gera um número aleatório entre 0 e 4 (ParaDireita = 3)
-    var direcao = rand.Intn(ParaDireita+1)
+	for _, fantasma := range fantasmas {
+		// gera um número aleatório entre 0 e 4 (Direita = 3)
+		var direcao = rand.Intn(ParaDireita + 1)
 
-    var novaPosicao = fantasma.posicao
+		var novaPosicao = fantasma.posicao
 
-    // Atualiza posição testando os limites do mapa
-    switch direcao {
-    case ParaCima:
-      novaPosicao.linha--
-      if novaPosicao.linha < 0 { novaPosicao.linha = labirinto.altura - 1 }
-    case ParaBaixo:
-      novaPosicao.linha++
-      if novaPosicao.linha > labirinto.altura - 1 { novaPosicao.linha = 0 }
-    case ParaEsquerda:
-      novaPosicao.coluna--
-      if novaPosicao.coluna < 0 { novaPosicao.coluna = labirinto.largura - 1 }
-    case ParaDireita:
-      novaPosicao.coluna++
-      if novaPosicao.coluna > labirinto.largura - 1 { novaPosicao.coluna = 0 }
-    }
+		// Atualiza posição testando os limites do mapa
+		switch direcao {
+		case ParaCima:
+			novaPosicao.linha--
+			if novaPosicao.linha < 0 {
+				novaPosicao.linha = labirinto.altura - 1
+			}
+		case ParaBaixo:
+			novaPosicao.linha++
+			if novaPosicao.linha > labirinto.altura-1 {
+				novaPosicao.linha = 0
+			}
+		case ParaEsquerda:
+			novaPosicao.coluna--
+			if novaPosicao.coluna < 0 {
+				novaPosicao.coluna = labirinto.largura - 1
+			}
+		case ParaDireita:
+			novaPosicao.coluna++
+			if novaPosicao.coluna > labirinto.largura-1 {
+				novaPosicao.coluna = 0
+			}
+		}
 
-    // Verifica se a posição nova do mapa é válida
-    conteudoMapa := labirinto.mapa[novaPosicao.linha][novaPosicao.coluna]
-    if conteudoMapa != '#' { fantasma.posicao = novaPosicao }
-  }
+		// Verifica se a posição nova do mapa é válida
+		conteudoMapa := labirinto.mapa[novaPosicao.linha][novaPosicao.coluna]
+		if conteudoMapa != '#' {
+			fantasma.posicao = novaPosicao
+		}
+	}
 }
 
 func dorme(milisegundos time.Duration) {
 	time.Sleep(time.Millisecond * milisegundos)
 }
 
-func entradaDoUsuario(canal chan<- Movimento) {
-	array := make([]byte, 10)
-
-	for {
-		lido, _ := os.Stdin.Read(array)
-
-		if lido == 1 && array[0] == 0x1b {
-			canal <- SairDoJogo
-		} else if lido == 3 {
-			if array[0] == 0x1b && array[1] == '[' {
-				switch array[2] {
-				case 'A':
-					canal <- ParaCima
-				case 'B':
-					canal <- ParaBaixo
-				case 'C':
-					canal <- ParaDireita
-				case 'D':
-					canal <- ParaEsquerda
-				}
-			}
+func detectarColisao() *Fantasma {
+	for _, fantasma := range fantasmas {
+		if fantasma.posicao == pacgo.posicao {
+			return fantasma
 		}
 	}
-}
-
-func ativarPilula() {
-	pacgo.pilula = true
-	go desativarPilula(10000)
-}
-
-func desativarPilula(milisegundos time.Duration) {
-	dorme(milisegundos)
-	pacgo.pilula = false
-}
-
-func terminarJogo() {
-	// pacgo morreu :(
-	tela.moveCursor(Posicao{labirinto.altura + 2, 0})
-	fmt.Println("Fim de jogo! Os fantasmas venceram... \xF0\x9F\x98\xAD")
+	return nil
 }
 
 func main() {
-	inicializa()
-	defer finaliza()
+	// Inicializar terminal
+	Inicializa()
+	defer Finaliza()
 
-	mapaSinais = make(map[int]string)
-	mapaSinais[0] = "Cima"
-	mapaSinais[1] = "Baixo"
-	mapaSinais[2] = "Direita"
-	mapaSinais[3] = "Esquerda"
-
+	// Lê parâmetros do sistema operacional
 	args := os.Args[1:]
 	var arquivo string
 	if len(args) >= 1 {
@@ -357,82 +305,88 @@ func main() {
 		arquivo = ""
 	}
 
-	construirLabirinto(arquivo)
+	// Inicializar labirinto
+	inicializarLabirinto(arquivo)
 
-	canal := make(chan Movimento, 10)
+	// Cria rotina para ler entradas
+	canal := make(chan Entrada, 10)
+	go leEntradaDoUsuario(canal)
 
-	// Processos assincronos
-	go entradaDoUsuario(canal)
-	go moverFantasmas()
-
-	var tecla Movimento
+	// Loop principal
 	for {
-		atualizarLabirinto()
-		if labirinto.quantiaPastilhas == 0 {
-			tela.moveCursor(Posicao{labirinto.altura + 2, 0})
-			fmt.Println("Fim de jogo! Você venceu! \xF0\x9F\x98\x84")
+		// Desenha tela
+		desenhaTela()
+
+		// Fim de jogo
+		if labirinto.numPastilhas == 0 {
+			MoveCursor(Posicao{labirinto.altura + 3, 0})
+			fmt.Print("Fim de jogo! Você venceu! \xF0\x9F\x98\x84\n\n")
 			break
 		}
 
-		// canal não-bloqueador
+		// Processa entrada do jogador
+		var tecla Entrada
 		select {
 		case tecla = <-canal:
-			moverPacGo(tecla)
 		default:
 		}
+
 		if tecla == SairDoJogo {
 			break
+		} else {
+			moverPacGo(tecla)
 		}
 
-		if detectarColisao() {
+		// Processa movimento dos fantasmas
+		moverFantasmas()
+
+		// Processa colisões
+		if fantasma := detectarColisao(); fantasma != nil {
 			if pacgo.pilula {
-				_, f := buscaFantasma(pacgo.posicao)
-				go criarFantasmaTemporizado(f, 5000)
-				matarFantasma(f)
-				pacgo.pontos = pacgo.pontos + 500
+				go ressucitarFantasma(fantasma, 10000) // 10 segundos
+				matarFantasma(fantasma)
+				pacgo.pontos += 500
 			} else {
-				// pacgo perde vidas
-				if !pacgo.invencivel {
-					pacgo.vidas--
-					if pacgo.vidas < 0 {
-						terminarJogo()
-						break
-					}
-					ativarInvencibilidade(3000)
-					pacgo.posicao.linha = pacgo.posicaoInicial.linha
-					pacgo.posicao.coluna = pacgo.posicaoInicial.coluna
-				}
+				pacgo.vidas--
+
+				// Reseta posição do PacGopher para a posição inicial
+				pacgo.posicao = pacgo.posInicial
+			}
+
+			if pacgo.vidas < 0 {
+				MoveCursor(Posicao{labirinto.altura + 3, 0})
+				fmt.Print("Fim de jogo! Os fantasmas venceram... \xF0\x9F\x98\xAD\n\n")
+				break
 			}
 		}
 
+		// Dorme
 		dorme(100)
 	}
 }
 
-func ativarInvencibilidade(milisegundos time.Duration) {
-	pacgo.invencivel = true
-	go func() {
-		dorme(milisegundos)
-		pacgo.invencivel = false
-	}()
+func ativarPilula() {
+	pacgo.pilula = true
+	go desativarPilula(10000) // 10 segundos
 }
 
-func buscaFantasma(posicao Posicao) (int, *Fantasma) {
-	for i, fantasma := range fantasmas {
-		if fantasma.posicao == posicao {
-			return i, fantasma
-		}
-	}
-	return -1, nil
+func desativarPilula(milisegundos time.Duration) {
+	dorme(milisegundos)
+	pacgo.pilula = false
 }
 
-func criarFantasmaTemporizado(fantasma *Fantasma, milisegundos time.Duration) {
+func ressucitarFantasma(fantasma *Fantasma, milisegundos time.Duration) {
 	dorme(milisegundos)
 	criarFantasma(fantasma.posicao, fantasma.figura)
 }
 
 func matarFantasma(fantasma *Fantasma) {
-	pos, _ := buscaFantasma(fantasma.posicao)
-	fantasmas = append(fantasmas[:pos], fantasmas[pos+1:]...)
-	fmt.Print("\x07")
+	var indice int
+	for idx, f := range fantasmas {
+		if f.posicao == fantasma.posicao {
+			indice = idx
+			break
+		}
+	}
+	fantasmas = append(fantasmas[:indice], fantasmas[indice+1:]...)
 }
