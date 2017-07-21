@@ -1321,7 +1321,7 @@ func inicializarLabirinto(arquivo string) error {
 	}
 
 	// determina o tamanho do mapa baseado no arquivo lido
-	largura := len(mapa[0]) - 2 // -2 para não contar o \x0D\x0A do final
+	largura := len(mapa[0])
 	altura := len(mapa)
 
 	labirinto = Labirinto{
