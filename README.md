@@ -563,7 +563,7 @@ func inicializarLabirinto() {
 Com o PacGo criado podemos movimentá-lo. Copie e cole o código abaixo depois da definição da função `desenhaTela`:
 
 ```
-func moverPacGo(m Movimento) {
+func moverPacGo(m Entrada) {
   var novaLinha = pacgo.posicao.linha
   var novaColuna = pacgo.posicao.coluna
 
