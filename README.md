@@ -812,7 +812,7 @@ func main() {
   inicializarLabirinto()
 
   // Cria rotina para ler entradas
-  canal := make(chan Movimento, 10)
+  canal := make(chan Entrada, 10)
 	go leEntradaDoUsuario(canal)
 
   // Loop principal
@@ -887,12 +887,15 @@ Nós já temos toda a funcionalidade básica do jogo pronta, mas ele ainda não 
 Na função `inicializarLabirinto`, vamos passar o código dos emojis no lugar das letras `G` e `F`:
 
 ```
+  // Processa caracteres especiais
+  for linha, linhaMapa := range labirinto.mapa {
     for coluna, caractere := range linhaMapa {
       switch( caractere ) {
         case 'G': { criarPacGo(Posicao{linha, coluna}, "\xF0\x9F\x98\x83") }
         case 'F': { criarFantasma(Posicao{linha, coluna}, "\xF0\x9F\x91\xBB") }
       }
     }
+  }
 ```
 
 Além disso, vamos substituir o símbolo `#` por paredes de verdade. Na função `desenhaTela`, altere o código abaixo para imprimir o muro:
